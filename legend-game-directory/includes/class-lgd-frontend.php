@@ -87,8 +87,16 @@ final class LGD_Frontend {
 	}
 
 	public static function card( $id ) {
-		$score = get_post_meta( $id, '_lgd_automated_score', true ); $types = wp_get_post_terms( $id, 'game_type', array( 'fields' => 'names' ) ); ob_start(); ?>
-		<article class="lgd-card"><a class="lgd-card-image" href="<?php echo esc_url( get_permalink( $id ) ); ?>"><?php echo get_the_post_thumbnail( $id, 'lgd-card', array( 'loading' => 'lazy' ) ); ?></a><div class="lgd-card-body"><div class="lgd-badges"><?php foreach ( $types as $type ) : ?><span><?php echo esc_html( str_replace( ' Games', '', $type ) ); ?></span><?php endforeach; ?></div><h3><a href="<?php echo esc_url( get_permalink( $id ) ); ?>"><?php echo esc_html( get_the_title( $id ) ); ?></a></h3><p><?php echo esc_html( wp_trim_words( get_the_excerpt( $id ), 20 ) ); ?></p><div class="lgd-card-footer"><span class="lgd-score <?php echo '' === (string) $score ? 'is-missing' : ''; ?>"><?php echo '' === (string) $score ? esc_html__( 'Not scored', 'legend-game-directory' ) : esc_html( round( $score ) ); ?></span><label><input type="checkbox" class="lgd-compare-choice" value="<?php echo esc_attr( $id ); ?>"> <?php esc_html_e( 'Compare', 'legend-game-directory' ); ?></label></div></div></article><?php return ob_get_clean();
+		$score = get_post_meta( $id, '_lgd_automated_score', true ); $types = wp_get_post_terms( $id, 'game_type', array( 'fields' => 'names' ) );
+		$thumb = get_the_post_thumbnail( $id, 'lgd-card', array( 'loading' => 'lazy' ) );
+		if ( ! $thumb ) {
+			$screens = get_post_meta( $id, '_lgd_official_screenshots', true );
+			if ( is_array( $screens ) && ! empty( $screens[0] ) ) {
+				$thumb = '<img src="' . esc_url( $screens[0] ) . '" alt="' . esc_attr( get_the_title( $id ) ) . '" loading="lazy" width="720" height="405">';
+			}
+		}
+		ob_start(); ?>
+		<article class="lgd-card"><a class="lgd-card-image" href="<?php echo esc_url( get_permalink( $id ) ); ?>"><?php echo $thumb; // already escaped ?></a><div class="lgd-card-body"><div class="lgd-badges"><?php foreach ( $types as $type ) : ?><span><?php echo esc_html( str_replace( ' Games', '', $type ) ); ?></span><?php endforeach; ?></div><h3><a href="<?php echo esc_url( get_permalink( $id ) ); ?>"><?php echo esc_html( get_the_title( $id ) ); ?></a></h3><p><?php echo esc_html( wp_trim_words( get_the_excerpt( $id ), 20 ) ); ?></p><div class="lgd-card-footer"><span class="lgd-score <?php echo '' === (string) $score ? 'is-missing' : ''; ?>"><?php echo '' === (string) $score ? esc_html__( 'Not scored', 'legend-game-directory' ) : esc_html( round( $score ) ); ?></span><label><input type="checkbox" class="lgd-compare-choice" value="<?php echo esc_attr( $id ); ?>"> <?php esc_html_e( 'Compare', 'legend-game-directory' ); ?></label></div></div></article><?php return ob_get_clean();
 	}
 
 	public function sources_shortcode( $atts ) {
