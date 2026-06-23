@@ -51,7 +51,8 @@ final class LGD_Importer {
 		update_post_meta( $game_id, '_lgd_last_verified', current_time( 'mysql', true ) );
 		update_post_meta( $game_id, '_lgd_verification_status', (float) $data['confidence'] >= 80 ? 'verified_source' : 'needs_review' );
 
-		$rating = LGD_Rating_Engine::calculate( isset( $data['rating_facts'] ) ? $data['rating_facts'] : array(), isset( $data['confidence'] ) ? $data['confidence'] : 0 );
+		$facts = ( isset( $data['rating_facts'] ) && is_array( $data['rating_facts'] ) ) ? $data['rating_facts'] : LGD_Rating_Engine::derive_facts( $data );
+		$rating = LGD_Rating_Engine::calculate( $facts, isset( $data['confidence'] ) ? $data['confidence'] : 0 );
 		LGD_Rating_Engine::save( $game_id, $rating );
 		$flags = self::mandatory_flags( $data, $old_score, $rating['score'], $is_new );
 		update_post_meta( $game_id, '_lgd_mandatory_review_flags', $flags );
