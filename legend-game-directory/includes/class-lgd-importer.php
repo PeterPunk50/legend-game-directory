@@ -98,7 +98,7 @@ final class LGD_Importer {
 			'external_critic_score' => '_lgd_external_critic_score', 'external_user_score' => '_lgd_external_user_score',
 		);
 		foreach ( $map as $source => $meta ) { if ( array_key_exists( $source, $data ) && null !== $data[ $source ] ) { update_post_meta( $game_id, $meta, $data[ $source ] ); } }
-		$url_map = array( 'steam' => '_lgd_steam_url', 'apple' => '_lgd_apple_app_store_url', 'itch' => '_lgd_itch_url' );
+		$url_map = array( 'steam' => '_lgd_steam_url', 'apple' => '_lgd_apple_app_store_url', 'google_play' => '_lgd_google_play_url', 'itch' => '_lgd_itch_url' );
 		if ( isset( $url_map[ $provider_id ] ) ) { update_post_meta( $game_id, $url_map[ $provider_id ], esc_url_raw( $data['source_url'] ) ); }
 		if ( 'official_site' === $provider_id ) { update_post_meta( $game_id, '_lgd_official_website', esc_url_raw( $data['source_url'] ) ); }
 		$ids = (array) get_post_meta( $game_id, '_lgd_provider_ids', true ); $ids[ $provider_id ] = sanitize_text_field( $data['external_id'] ); update_post_meta( $game_id, '_lgd_provider_ids', $ids );
