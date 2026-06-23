@@ -78,12 +78,16 @@ final class LGD_Provider_Official_Site implements LGD_Provider_Interface {
 		$free_type = ( null !== $price && 0.0 === $price ) ? 'Permanently Free' : ( ! empty( $data['_lgd_og_only'] ) ? 'Open Source' : '' );
 
 		// Collect artwork: JSON-LD image → og:image (_lgd_image).
+		// JSON-LD "image" may be a string, an indexed array, or an ImageObject {url:...}.
 		$images = array();
 		foreach ( array( 'image', '_lgd_image' ) as $key ) {
-			if ( ! empty( $data[ $key ] ) ) {
-				$img = esc_url_raw( is_array( $data[ $key ] ) ? $data[ $key ][0] : $data[ $key ] );
-				if ( $img && ! in_array( $img, $images, true ) ) { $images[] = $img; }
+			if ( empty( $data[ $key ] ) ) { continue; }
+			$value = $data[ $key ];
+			if ( is_array( $value ) ) {
+				$value = ! empty( $value['url'] ) ? $value['url'] : ( isset( $value[0] ) ? ( is_array( $value[0] ) && ! empty( $value[0]['url'] ) ? $value[0]['url'] : $value[0] ) : '' );
 			}
+			$img = esc_url_raw( (string) $value );
+			if ( $img && ! in_array( $img, $images, true ) ) { $images[] = $img; }
 		}
 
 		return array(

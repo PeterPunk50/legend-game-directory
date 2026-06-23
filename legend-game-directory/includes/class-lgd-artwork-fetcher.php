@@ -96,8 +96,8 @@ final class LGD_Artwork_Fetcher {
 			$nodes = isset( $ld['@graph'] ) ? $ld['@graph'] : array( $ld );
 			foreach ( (array) $nodes as $node ) {
 				if ( ! empty( $node['image'] ) ) {
-					$img = is_array( $node['image'] ) ? $node['image'][0] : $node['image'];
-					break;
+					$img = self::ld_image_url( $node['image'] );
+					if ( $img ) { break; }
 				}
 			}
 		}
@@ -117,6 +117,28 @@ final class LGD_Artwork_Fetcher {
 		}
 
 		return esc_url_raw( $img );
+	}
+
+	/**
+	 * Resolve a JSON-LD "image" value to a single URL string.
+	 * Handles: plain string, indexed array of strings, ImageObject
+	 * (associative array with a "url" key), and arrays of ImageObjects.
+	 *
+	 * @param mixed $image
+	 * @return string
+	 */
+	private static function ld_image_url( $image ) {
+		if ( is_string( $image ) ) { return $image; }
+		if ( is_array( $image ) ) {
+			// ImageObject: { "@type": "ImageObject", "url": "..." }
+			if ( ! empty( $image['url'] ) && is_string( $image['url'] ) ) { return $image['url']; }
+			// Array of values (strings or ImageObjects) — take the first resolvable one.
+			foreach ( $image as $entry ) {
+				$url = self::ld_image_url( $entry );
+				if ( $url ) { return $url; }
+			}
+		}
+		return '';
 	}
 
 	/**
