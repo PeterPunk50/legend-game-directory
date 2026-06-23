@@ -60,6 +60,48 @@ final class LGD_Artwork_Fetcher {
 	}
 
 	/**
+	 * Best-effort artwork for any game, trying every URL source it has.
+	 *
+	 * Order: existing screenshots → official website → Apple → Google Play →
+	 * Steam → itch. Stores the first og:image found and tries to sideload it.
+	 * Returns a status string for logging:
+	 *   'thumb'      already had a featured image
+	 *   'sideloaded' image downloaded as an attachment
+	 *   'cdn-only'   image URL stored (card() renders it) but download blocked
+	 *   'none'       no artwork could be found from any source
+	 *
+	 * @param int $game_id
+	 * @return string
+	 */
+	public static function fetch_for_game_any( $game_id ) {
+		if ( get_post_thumbnail_id( $game_id ) ) { return 'thumb'; }
+
+		// Already has a stored screenshot URL — just try to make it an attachment.
+		$screens = get_post_meta( $game_id, '_lgd_official_screenshots', true );
+		if ( is_array( $screens ) && ! empty( $screens[0] ) ) {
+			$att = self::sideload_for_game( $game_id );
+			return is_wp_error( $att ) ? 'cdn-only' : 'sideloaded';
+		}
+
+		// No screenshot yet — scrape og:image from any URL this game already has.
+		$url_keys = array(
+			'_lgd_official_website', '_lgd_apple_app_store_url', '_lgd_google_play_url',
+			'_lgd_steam_url', '_lgd_itch_url',
+		);
+		foreach ( $url_keys as $key ) {
+			$url = get_post_meta( $game_id, $key, true );
+			if ( ! $url ) { continue; }
+			$image = self::fetch_og_image( $url );
+			if ( is_wp_error( $image ) || ! $image ) { continue; }
+			update_post_meta( $game_id, '_lgd_official_screenshots', array( $image ) );
+			$att = self::sideload_for_game( $game_id );
+			return is_wp_error( $att ) ? 'cdn-only' : 'sideloaded';
+		}
+
+		return 'none';
+	}
+
+	/**
 	 * Download _lgd_official_screenshots[0] as a WP media attachment and set it as
 	 * the featured image. Skips if a thumbnail already exists.
 	 *
