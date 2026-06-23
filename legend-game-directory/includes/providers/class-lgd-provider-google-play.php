@@ -225,6 +225,10 @@ final class LGD_Provider_Google_Play implements LGD_Provider_Interface {
 				if ( ! empty( $ld['aggregateRating']['ratingValue'] ) ) { $raw['rating'] = (float) $ld['aggregateRating']['ratingValue']; }
 				if ( ! empty( $ld['applicationCategory'] ) ) { $raw['category'] = $this->clean_category( $ld['applicationCategory'] ); }
 				if ( ! empty( $ld['operatingSystem'] ) )      { $raw['os'] = $ld['operatingSystem']; }
+				// App icon from JSON-LD — used as image fallback when no screenshots found.
+				if ( ! empty( $ld['image'] ) ) {
+					$raw['icon_url'] = esc_url_raw( is_array( $ld['image'] ) ? $ld['image'][0] : $ld['image'] );
+				}
 			}
 		}
 
@@ -239,15 +243,31 @@ final class LGD_Provider_Google_Play implements LGD_Provider_Interface {
 				$raw['description'] = html_entity_decode( $m[1], ENT_QUOTES );
 			}
 		}
+		// og:image is the feature graphic or icon — grab as image fallback.
+		if ( empty( $raw['icon_url'] ) && preg_match( '/<meta\s+property="og:image"\s+content="([^"]+)"/i', $html, $m ) ) {
+			$raw['icon_url'] = esc_url_raw( html_entity_decode( $m[1], ENT_QUOTES ) );
+		}
 
 		// 3. Screenshots from Play CDN (play-lh.googleusercontent.com).
+		// The CDN path uses URL-safe base64 (A-Z a-z 0-9 - _) plus path separators.
+		// Screenshots have width (w) or height (h) params; icons use size (s) param — take all, dedup later.
 		preg_match_all(
-			'#https://play-lh\.googleusercontent\.com/[A-Za-z0-9_\-]+=w\d+[A-Za-z0-9\-]*#',
+			'#https://play-lh\.googleusercontent\.com/[A-Za-z0-9_\-/+=]+=(?:w|h|s)\d+[A-Za-z0-9_\-]*#',
 			$html,
 			$sm
 		);
 		if ( ! empty( $sm[0] ) ) {
-			$raw['screenshots'] = array_values( array_unique( array_slice( $sm[0], 0, 8 ) ) );
+			// Prefer width-dimension images (screenshots) over square icons.
+			$screens = array_values( array_unique( $sm[0] ) );
+			usort( $screens, function( $a, $b ) {
+				return ( false !== strpos( $b, '=w' ) ) - ( false !== strpos( $a, '=w' ) );
+			} );
+			$raw['screenshots'] = array_slice( $screens, 0, 8 );
+		}
+		// Fallback: if Play CDN screenshots weren't found in SSR HTML (they're often JS-rendered),
+		// use the icon/og:image so the card always has at least one image.
+		if ( empty( $raw['screenshots'] ) && ! empty( $raw['icon_url'] ) ) {
+			$raw['screenshots'] = array( $raw['icon_url'] );
 		}
 
 		// 4. Last updated date — Play Store renders "Updated on MMM DD, YYYY".
