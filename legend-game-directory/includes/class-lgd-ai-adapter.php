@@ -6,6 +6,32 @@ final class LGD_AI_Adapter {
 		return class_exists( '\\WordPress\\AiClient\\AiClient' ) && class_exists( '\\WordPress\\OpenAiAiProvider\\Provider\\OpenAiProvider' );
 	}
 
+	/**
+	 * Inject the OpenAI API key into the core AI Client provider registry.
+	 * The connector ("AI Provider for OpenAI") registers the provider class on init:5 but never
+	 * sets credentials. We read the key from the LGD_OPENAI_API_KEY constant (defined in wp-config.php,
+	 * never stored in options or the repo) and configure the provider once. Hooked on init:6.
+	 */
+	public static function ensure_provider_credentials() {
+		if ( ! self::available() || ! defined( 'LGD_OPENAI_API_KEY' ) ) { return; }
+		$key = trim( (string) LGD_OPENAI_API_KEY );
+		if ( '' === $key ) { return; }
+		try {
+			$registry = \WordPress\AiClient\AiClient::defaultRegistry();
+			if ( ! in_array( 'openai', (array) $registry->getRegisteredProviderIds(), true ) || $registry->isProviderConfigured( 'openai' ) ) { return; }
+			$registry->setProviderRequestAuthentication( 'openai', new \WordPress\AiClient\Providers\Http\DTO\ApiKeyRequestAuthentication( $key ) );
+		} catch ( \Throwable $e ) {
+			LGD_Logger::log( 'ai_key_inject_failed', 'Could not configure OpenAI provider credentials.', array( 'error' => $e->getMessage() ), 'warning' );
+		}
+	}
+
+	public static function provider_configured() {
+		try {
+			$registry = \WordPress\AiClient\AiClient::defaultRegistry();
+			return in_array( 'openai', (array) $registry->getRegisteredProviderIds(), true ) && $registry->isProviderConfigured( 'openai' );
+		} catch ( \Throwable $e ) { return false; }
+	}
+
 	public static function schema() {
 		$strings = array( 'title', 'short_description', 'full_summary', 'free_type', 'best_for', 'seo_title', 'meta_description', 'image_prompt' );
 		$properties = array();
@@ -120,6 +146,8 @@ final class LGD_AI_Adapter {
 		$settings = LGD_Security::settings();
 		if ( empty( $settings['enable_ai'] ) ) { return new WP_Error( 'lgd_ai_disabled', __( 'AI is disabled.', 'legend-game-directory' ) ); }
 		if ( ! self::available() ) { return new WP_Error( 'lgd_ai_unavailable', __( 'The WordPress AI Client and OpenAI provider are not available.', 'legend-game-directory' ) ); }
+		self::ensure_provider_credentials();
+		if ( ! self::provider_configured() ) { return new WP_Error( 'lgd_ai_no_key', __( 'No OpenAI API key is configured. Define LGD_OPENAI_API_KEY in wp-config.php.', 'legend-game-directory' ) ); }
 		$daily = (array) get_option( 'lgd_ai_usage_' . gmdate( 'Ymd' ), array( 'requests' => 0, 'cost' => 0 ) );
 		$monthly = (array) get_option( 'lgd_ai_usage_' . gmdate( 'Ym' ), array( 'requests' => 0, 'cost' => 0 ) );
 		if ( (int) $daily['requests'] >= (int) $settings['ai_daily_request_limit'] || (float) $monthly['cost'] >= (float) $settings['ai_monthly_cost_limit'] ) { return new WP_Error( 'lgd_ai_budget', sprintf( __( 'AI %s request blocked by the configured budget.', 'legend-game-directory' ), $kind ) ); }

@@ -49,6 +49,7 @@ final class LGD_Plugin {
 		new LGD_Admin();
 		new LGD_Frontend();
 		add_action( 'admin_init', array( 'LGD_Database', 'maybe_upgrade' ) );
+		add_action( 'init', array( 'LGD_AI_Adapter', 'ensure_provider_credentials' ), 6 );
 	}
 
 	public static function activate() {
