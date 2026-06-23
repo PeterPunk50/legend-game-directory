@@ -75,9 +75,12 @@ final class LGD_Importer {
 	}
 
 	private static function find_duplicate( $data ) {
-		$slug = sanitize_title( $data['title'] );
-		$posts = get_posts( array( 'post_type' => 'game', 'post_status' => 'any', 'name' => $slug, 'numberposts' => 2, 'fields' => 'ids' ) );
-		return 1 === count( $posts ) ? (int) $posts[0] : 0;
+		global $wpdb;
+		// Match by exact title across any status (pending records have no slug, so a name match would miss them).
+		// Only merge when the match is unambiguous (exactly one existing record).
+		$title = sanitize_text_field( $data['title'] );
+		$ids = $wpdb->get_col( $wpdb->prepare( "SELECT ID FROM {$wpdb->posts} WHERE post_type='game' AND post_status<>'trash' AND post_title=%s ORDER BY ID ASC LIMIT 2", $title ) );
+		return 1 === count( $ids ) ? (int) $ids[0] : 0;
 	}
 
 	private static function save_fields( $game_id, $provider_id, $data ) {
