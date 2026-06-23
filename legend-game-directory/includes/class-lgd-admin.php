@@ -10,6 +10,7 @@ final class LGD_Admin {
 		add_action( 'admin_post_lgd_approve_batch', array( $this, 'approve_batch' ) );
 		add_action( 'admin_post_lgd_import', array( $this, 'import' ) );
 		add_action( 'admin_post_lgd_seed_starters', array( $this, 'seed_starters' ) );
+		add_action( 'admin_post_lgd_fetch_artwork', array( $this, 'fetch_artwork' ) );
 	}
 
 	public static function add_capabilities() {
@@ -108,7 +109,34 @@ final class LGD_Admin {
 	public function meta_box() { add_meta_box( 'lgd_game_details', __( 'Legend Game Details', 'legend-game-directory' ), array( $this, 'render_meta_box' ), 'game', 'normal', 'high' ); }
 	public function render_meta_box( $post ) {
 		wp_nonce_field( 'lgd_save_game', 'lgd_game_nonce' ); $fields = array( '_lgd_developer' => 'Developer', '_lgd_publisher' => 'Publisher', '_lgd_official_website' => 'Official website', '_lgd_steam_url' => 'Steam URL', '_lgd_google_play_url' => 'Google Play URL', '_lgd_apple_app_store_url' => 'Apple App Store URL', '_lgd_current_price' => 'Current price', '_lgd_currency' => 'Currency', '_lgd_editorial_score' => 'Editorial score (0–100)', '_lgd_external_critic_score' => 'External critic score (0–100)', '_lgd_external_user_score' => 'External user score (0–100)', '_lgd_confidence' => 'Confidence (0–100)' );
-		echo '<table class="form-table">'; foreach ( $fields as $key => $label ) { echo '<tr><th><label for="' . esc_attr( $key ) . '">' . esc_html( $label ) . '</label></th><td><input class="regular-text" id="' . esc_attr( $key ) . '" name="lgd_meta[' . esc_attr( $key ) . ']" value="' . esc_attr( get_post_meta( $post->ID, $key, true ) ) . '"></td></tr>'; } echo '</table>';
+		echo '<table class="form-table">';
+		foreach ( $fields as $key => $label ) {
+			echo '<tr><th><label for="' . esc_attr( $key ) . '">' . esc_html( $label ) . '</label></th><td><input class="regular-text" id="' . esc_attr( $key ) . '" name="lgd_meta[' . esc_attr( $key ) . ']" value="' . esc_attr( get_post_meta( $post->ID, $key, true ) ) . '">';
+			if ( '_lgd_official_website' === $key ) {
+				$fetch_url = wp_nonce_url( add_query_arg( array( 'action' => 'lgd_fetch_artwork', 'post_id' => $post->ID ), admin_url( 'admin-post.php' ) ), 'lgd_fetch_artwork_' . $post->ID );
+				echo ' <a href="' . esc_url( $fetch_url ) . '" class="button button-secondary" style="vertical-align:middle">' . esc_html__( 'Fetch Artwork', 'legend-game-directory' ) . '</a>';
+				$screens = get_post_meta( $post->ID, '_lgd_official_screenshots', true );
+				if ( is_array( $screens ) && ! empty( $screens[0] ) ) {
+					echo '<br><img src="' . esc_url( $screens[0] ) . '" style="margin-top:6px;max-width:240px;height:auto;border-radius:4px" loading="lazy">';
+				}
+			}
+			echo '</td></tr>';
+		}
+		echo '</table>';
+		// Admin notice if message was passed back.
+		if ( ! empty( $_GET['lgd_aw'] ) ) {
+			$msg = 'ok' === $_GET['lgd_aw'] ? __( 'Artwork fetched and stored.', 'legend-game-directory' ) : __( 'No artwork found on that page.', 'legend-game-directory' );
+			echo '<p class="' . ( 'ok' === $_GET['lgd_aw'] ? 'updated' : 'error' ) . '" style="padding:4px 8px">' . esc_html( $msg ) . '</p>';
+		}
+	}
+
+	public function fetch_artwork() {
+		$post_id = absint( isset( $_GET['post_id'] ) ? $_GET['post_id'] : 0 );
+		if ( ! $post_id || ! current_user_can( 'edit_post', $post_id ) ) { wp_die( esc_html__( 'Permission denied.', 'legend-game-directory' ) ); }
+		check_admin_referer( 'lgd_fetch_artwork_' . $post_id );
+		$ok = LGD_Artwork_Fetcher::fetch_for_game( $post_id );
+		if ( $ok ) { LGD_Artwork_Fetcher::sideload_for_game( $post_id ); }
+		wp_safe_redirect( add_query_arg( array( 'action' => 'edit', 'post' => $post_id, 'lgd_aw' => $ok ? 'ok' : 'fail' ), admin_url( 'post.php' ) ) ); exit;
 	}
 
 	public function save_game( $post_id, $post ) {

@@ -24,6 +24,7 @@ final class LGD_Plugin {
 			'includes/providers/class-lgd-provider-external-score.php',
 			'includes/providers/class-lgd-provider-official-site.php',
 			'includes/class-lgd-rating-engine.php', 'includes/class-lgd-ai-adapter.php',
+			'includes/class-lgd-artwork-fetcher.php',
 			'includes/class-lgd-importer.php', 'includes/class-lgd-scheduler.php',
 			'includes/class-lgd-reviews.php', 'includes/class-lgd-comparison.php',
 			'includes/class-lgd-engagement.php', 'includes/class-lgd-seo.php',
