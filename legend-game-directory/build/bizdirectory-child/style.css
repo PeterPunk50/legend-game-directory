@@ -1,0 +1,9 @@
+/*
+Theme Name: BizDirectory Legend Child
+Template: bizdirectory
+Version: 0.1.0
+Requires at least: 7.0
+Requires PHP: 7.4
+Text Domain: bizdirectory-legend
+*/
+body{background:#07111f;color:#f6f8fc}body,a{font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.site-header{background:#081423;border-bottom:1px solid rgba(255,255,255,.1)}.site-title a,.main-navigation a{color:#f6f8fc}.site-footer{background:#050b14;color:#a9b7ca}.site-content{padding:0}.lgd-home-section{padding:54px 0}.lgd-home-section:nth-child(even){background:#0a1626}.lgd-home-heading{display:flex;justify-content:space-between;align-items:end;gap:20px}.lgd-home-heading h2{font-size:clamp(1.6rem,3vw,2.5rem);margin:0}.lgd-home-heading p{color:#a9b7ca}.lgd-home-cta{display:grid;grid-template-columns:1.4fr 1fr;gap:24px}.lgd-home-cta>div{background:#101c2d;border:1px solid rgba(255,255,255,.12);border-radius:18px;padding:28px}@media(max-width:700px){.lgd-home-cta{grid-template-columns:1fr}.lgd-home-heading{display:block}}

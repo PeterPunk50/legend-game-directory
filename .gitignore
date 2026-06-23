@@ -1,0 +1,23 @@
+# OS / editor junk
+.DS_Store
+Thumbs.db
+desktop.ini
+*~
+*.swp
+.idea/
+.vscode/
+
+# Logs / temp
+*.log
+*.tmp
+/tmp/
+
+# Dependencies / build artifacts (none committed yet, but guard against them)
+node_modules/
+vendor/
+
+# Secrets — never commit API keys or local config
+.env
+.env.*
+*.local.php
+secrets.json
