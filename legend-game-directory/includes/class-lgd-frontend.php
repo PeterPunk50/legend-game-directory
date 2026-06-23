@@ -95,6 +95,12 @@ final class LGD_Frontend {
 				$thumb = '<img src="' . esc_url( $screens[0] ) . '" alt="' . esc_attr( get_the_title( $id ) ) . '" loading="lazy" width="720" height="405">';
 			}
 		}
+		if ( ! $thumb ) {
+			// No real artwork available — render a branded title tile so the card never looks broken.
+			$title = get_the_title( $id );
+			$hue   = (int) round( hexdec( substr( md5( $title ), 0, 2 ) ) * 360 / 255 );
+			$thumb = '<span class="lgd-card-ph" style="--lgd-h:' . esc_attr( $hue ) . '">' . esc_html( $title ) . '</span>';
+		}
 		ob_start(); ?>
 		<article class="lgd-card"><a class="lgd-card-image" href="<?php echo esc_url( get_permalink( $id ) ); ?>"><?php echo $thumb; // already escaped ?></a><div class="lgd-card-body"><div class="lgd-badges"><?php foreach ( $types as $type ) : ?><span><?php echo esc_html( str_replace( ' Games', '', $type ) ); ?></span><?php endforeach; ?></div><h3><a href="<?php echo esc_url( get_permalink( $id ) ); ?>"><?php echo esc_html( get_the_title( $id ) ); ?></a></h3><p><?php echo esc_html( wp_trim_words( get_the_excerpt( $id ), 20 ) ); ?></p><div class="lgd-card-footer"><span class="lgd-score <?php echo '' === (string) $score ? 'is-missing' : ''; ?>"><?php echo '' === (string) $score ? esc_html__( 'Not scored', 'legend-game-directory' ) : esc_html( round( $score ) ); ?></span><label><input type="checkbox" class="lgd-compare-choice" value="<?php echo esc_attr( $id ); ?>"> <?php esc_html_e( 'Compare', 'legend-game-directory' ); ?></label></div></div></article><?php return ob_get_clean();
 	}
