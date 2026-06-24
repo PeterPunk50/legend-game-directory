@@ -19,10 +19,39 @@ final class LGD_Taxonomy_Map {
 		'game_pricing' => 'Pricing',
 	);
 
+	// Known bad terms from Apple / Google Play — seeded by the "Load Defaults" button.
+	const DEFAULTS = array(
+		'game_genre' => array(
+			'games'            => '_drop_',
+			'entertainment'    => '_drop_',
+			'health & fitness' => '_drop_',
+			'health fitness'   => '_drop_',
+			'music'            => '_drop_',
+			'utilities'        => '_drop_',
+			'books'            => '_drop_',
+			'kids games'       => '_drop_',
+			'role playing'     => 'rpg',
+			'roleplaying'      => 'rpg',
+			'game_action'      => 'action',
+			'game_adventure'   => 'adventure',
+			'game_puzzle'      => 'puzzle',
+			'game_strategy'    => 'strategy',
+			'arcade'           => 'action',
+			'education'        => 'educational',
+			'family'           => 'casual',
+			'kids & family'    => 'casual',
+			'word'             => 'puzzle',
+			'trivia'           => 'puzzle',
+			'sports & outdoor' => 'sports',
+		),
+	);
+
 	public function __construct() {
 		add_action( 'admin_menu', array( $this, 'register_menu' ) );
 		add_action( 'admin_post_lgd_save_taxonomy_map', array( $this, 'save_entry' ) );
 		add_action( 'admin_post_lgd_delete_taxonomy_map', array( $this, 'delete_entry' ) );
+		add_action( 'admin_post_lgd_seed_taxonomy_map', array( $this, 'seed_defaults' ) );
+		add_action( 'admin_post_lgd_bulk_taxonomy_map', array( $this, 'bulk_import' ) );
 	}
 
 	public function register_menu() {
@@ -73,9 +102,10 @@ final class LGD_Taxonomy_Map {
 		check_admin_referer( 'lgd_save_taxonomy_map' );
 		if ( ! current_user_can( 'manage_options' ) ) { wp_die( esc_html__( 'Permission denied.', 'legend-game-directory' ) ); }
 
-		$taxonomy  = sanitize_key( wp_unslash( isset( $_POST['taxonomy'] ) ? $_POST['taxonomy'] : '' ) );
-		$raw_term  = strtolower( sanitize_text_field( wp_unslash( isset( $_POST['raw_term'] ) ? $_POST['raw_term'] : '' ) ) );
-		$canonical = sanitize_title( wp_unslash( isset( $_POST['canonical_slug'] ) ? $_POST['canonical_slug'] : '' ) );
+		$taxonomy     = sanitize_key( wp_unslash( isset( $_POST['taxonomy'] ) ? $_POST['taxonomy'] : '' ) );
+		$raw_term     = strtolower( sanitize_text_field( wp_unslash( isset( $_POST['raw_term'] ) ? $_POST['raw_term'] : '' ) ) );
+		$raw_can      = trim( wp_unslash( isset( $_POST['canonical_slug'] ) ? $_POST['canonical_slug'] : '' ) );
+		$canonical    = '_drop_' === $raw_can ? '_drop_' : sanitize_title( $raw_can );
 
 		if ( ! array_key_exists( $taxonomy, self::TAXONOMIES ) || '' === $raw_term || '' === $canonical ) {
 			wp_safe_redirect( add_query_arg( array( 'post_type' => 'game', 'page' => 'lgd-taxonomy-map', 'lgd_err' => 'invalid' ), admin_url( 'edit.php' ) ) ); exit;
@@ -88,6 +118,52 @@ final class LGD_Taxonomy_Map {
 		LGD_Logger::log( 'taxonomy_map_saved', "Term mapping added: '{$raw_term}' → '{$canonical}' in {$taxonomy}.", array(), 'info' );
 
 		wp_safe_redirect( add_query_arg( array( 'post_type' => 'game', 'page' => 'lgd-taxonomy-map', 'lgd_saved' => 1 ), admin_url( 'edit.php' ) ) ); exit;
+	}
+
+	public function seed_defaults() {
+		check_admin_referer( 'lgd_seed_taxonomy_map' );
+		if ( ! current_user_can( 'manage_options' ) ) { wp_die( esc_html__( 'Permission denied.', 'legend-game-directory' ) ); }
+
+		$map = self::get_map();
+		foreach ( self::DEFAULTS as $taxonomy => $entries ) {
+			if ( ! isset( $map[ $taxonomy ] ) ) { $map[ $taxonomy ] = array(); }
+			foreach ( $entries as $raw => $canonical ) { $map[ $taxonomy ][ $raw ] = $canonical; }
+		}
+		update_option( self::OPTION, $map, false );
+		$count = array_sum( array_map( 'count', self::DEFAULTS ) );
+		LGD_Logger::log( 'taxonomy_map_seeded', "Seeded {$count} default term mappings.", array(), 'info' );
+
+		wp_safe_redirect( add_query_arg( array( 'post_type' => 'game', 'page' => 'lgd-taxonomy-map', 'lgd_seeded' => $count ), admin_url( 'edit.php' ) ) ); exit;
+	}
+
+	public function bulk_import() {
+		check_admin_referer( 'lgd_bulk_taxonomy_map' );
+		if ( ! current_user_can( 'manage_options' ) ) { wp_die( esc_html__( 'Permission denied.', 'legend-game-directory' ) ); }
+
+		$taxonomy = sanitize_key( wp_unslash( isset( $_POST['taxonomy'] ) ? $_POST['taxonomy'] : '' ) );
+		if ( ! array_key_exists( $taxonomy, self::TAXONOMIES ) ) {
+			wp_safe_redirect( add_query_arg( array( 'post_type' => 'game', 'page' => 'lgd-taxonomy-map', 'lgd_err' => 'invalid' ), admin_url( 'edit.php' ) ) ); exit;
+		}
+
+		$lines = preg_split( '/\r?\n/', wp_unslash( isset( $_POST['bulk_mappings'] ) ? $_POST['bulk_mappings'] : '' ) );
+		$map   = self::get_map();
+		if ( ! isset( $map[ $taxonomy ] ) ) { $map[ $taxonomy ] = array(); }
+		$count = 0;
+		foreach ( $lines as $line ) {
+			$line = trim( $line );
+			if ( '' === $line || '#' === $line[0] ) { continue; }
+			$parts = array_map( 'trim', explode( '|', $line, 2 ) );
+			if ( 2 !== count( $parts ) || '' === $parts[0] || '' === $parts[1] ) { continue; }
+			$raw       = strtolower( sanitize_text_field( $parts[0] ) );
+			$canonical = '_drop_' === $parts[1] ? '_drop_' : sanitize_title( $parts[1] );
+			if ( '' === $raw || '' === $canonical ) { continue; }
+			$map[ $taxonomy ][ $raw ] = $canonical;
+			$count++;
+		}
+		update_option( self::OPTION, $map, false );
+		LGD_Logger::log( 'taxonomy_map_bulk', "Bulk imported {$count} term mappings into {$taxonomy}.", array(), 'info' );
+
+		wp_safe_redirect( add_query_arg( array( 'post_type' => 'game', 'page' => 'lgd-taxonomy-map', 'lgd_imported' => $count ), admin_url( 'edit.php' ) ) ); exit;
 	}
 
 	public function delete_entry() {
@@ -114,9 +190,46 @@ final class LGD_Taxonomy_Map {
 
 			<?php if ( ! empty( $_GET['lgd_saved'] ) ) : ?><div class="notice notice-success is-dismissible"><p><?php esc_html_e( 'Mapping saved.', 'legend-game-directory' ); ?></p></div><?php endif; ?>
 			<?php if ( ! empty( $_GET['lgd_deleted'] ) ) : ?><div class="notice notice-success is-dismissible"><p><?php esc_html_e( 'Mapping deleted.', 'legend-game-directory' ); ?></p></div><?php endif; ?>
+			<?php if ( ! empty( $_GET['lgd_seeded'] ) ) : ?><div class="notice notice-success is-dismissible"><p><?php printf( esc_html__( '%d default mappings loaded.', 'legend-game-directory' ), (int) $_GET['lgd_seeded'] ); ?></p></div><?php endif; ?>
+			<?php if ( isset( $_GET['lgd_imported'] ) ) : ?><div class="notice notice-success is-dismissible"><p><?php printf( esc_html__( '%d mappings imported.', 'legend-game-directory' ), (int) $_GET['lgd_imported'] ); ?></p></div><?php endif; ?>
 			<?php if ( ! empty( $_GET['lgd_err'] ) ) : ?><div class="notice notice-error is-dismissible"><p><?php esc_html_e( 'Invalid input — check all fields and try again.', 'legend-game-directory' ); ?></p></div><?php endif; ?>
 
-			<h2><?php esc_html_e( 'Add Mapping', 'legend-game-directory' ); ?></h2>
+			<h2><?php esc_html_e( 'Quick Actions', 'legend-game-directory' ); ?></h2>
+			<p><?php esc_html_e( 'Load all known Apple / Google Play genre normalization rules in one click (21 mappings).', 'legend-game-directory' ); ?></p>
+			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+				<?php wp_nonce_field( 'lgd_seed_taxonomy_map' ); ?>
+				<input type="hidden" name="action" value="lgd_seed_taxonomy_map">
+				<?php submit_button( __( 'Load Apple / Google Play Defaults', 'legend-game-directory' ), 'secondary', 'submit', false ); ?>
+			</form>
+
+			<h2><?php esc_html_e( 'Bulk Import', 'legend-game-directory' ); ?></h2>
+			<p><?php esc_html_e( 'Paste multiple mappings at once — one per line, format: raw term|canonical_slug. Use _drop_ as the canonical to silently ignore a term.', 'legend-game-directory' ); ?></p>
+			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+				<?php wp_nonce_field( 'lgd_bulk_taxonomy_map' ); ?>
+				<input type="hidden" name="action" value="lgd_bulk_taxonomy_map">
+				<table class="form-table">
+					<tr>
+						<th><label for="lgd_bulk_tax"><?php esc_html_e( 'Taxonomy', 'legend-game-directory' ); ?></label></th>
+						<td>
+							<select id="lgd_bulk_tax" name="taxonomy">
+								<?php foreach ( self::TAXONOMIES as $slug => $label ) : ?>
+									<option value="<?php echo esc_attr( $slug ); ?>"><?php echo esc_html( $label ); ?></option>
+								<?php endforeach; ?>
+							</select>
+						</td>
+					</tr>
+					<tr>
+						<th><label for="lgd_bulk_mappings"><?php esc_html_e( 'Mappings', 'legend-game-directory' ); ?></label></th>
+						<td>
+							<textarea id="lgd_bulk_mappings" name="bulk_mappings" rows="10" class="large-text code" placeholder="games|_drop_&#10;entertainment|_drop_&#10;roleplaying|rpg&#10;education|educational"></textarea>
+							<p class="description"><?php esc_html_e( 'Lines starting with # are ignored. Existing mappings are overwritten.', 'legend-game-directory' ); ?></p>
+						</td>
+					</tr>
+				</table>
+				<?php submit_button( __( 'Import Mappings', 'legend-game-directory' ) ); ?>
+			</form>
+
+			<h2><?php esc_html_e( 'Add Single Mapping', 'legend-game-directory' ); ?></h2>
 			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
 				<?php wp_nonce_field( 'lgd_save_taxonomy_map' ); ?>
 				<input type="hidden" name="action" value="lgd_save_taxonomy_map">
