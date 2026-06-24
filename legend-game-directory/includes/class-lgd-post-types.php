@@ -90,7 +90,7 @@ final class LGD_Post_Types {
 		$sets = array(
 			'game_type' => array( 'Free Games', 'Indie Games', 'Mobile Games' ),
 			'game_platform' => array( 'Android', 'iOS', 'Windows', 'macOS', 'Linux', 'Browser', 'Steam Deck' ),
-			'game_genre' => array( 'Action', 'Adventure', 'RPG', 'Strategy', 'Simulation', 'Puzzle', 'Racing', 'Sports', 'Horror', 'Survival', 'Sandbox', 'Casual', 'Card', 'Roguelike', 'Platformer', 'MMO', 'Multiplayer' ),
+			'game_genre' => array( 'Action', 'Adventure', 'RPG', 'Strategy', 'Simulation', 'Puzzle', 'Racing', 'Sports', 'Horror', 'Survival', 'Sandbox', 'Casual', 'Card', 'Roguelike', 'Platformer', 'MMO', 'Multiplayer', 'Educational' ),
 			'game_pricing' => array( 'Permanently Free', 'Free to Play', 'Freemium', 'Free Demo', 'Temporarily Free', 'Open Source', 'Paid Indie' ),
 		);
 		foreach ( $sets as $taxonomy => $terms ) {

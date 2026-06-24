@@ -110,8 +110,16 @@ final class LGD_Importer {
 		if ( ! empty( $data['is_indie'] ) && (float) $data['indie_confidence'] >= 50 ) { $types[] = 'Indie Games'; }
 		if ( ! empty( $data['is_mobile'] ) ) { $types[] = 'Mobile Games'; }
 		wp_set_object_terms( $game_id, $types, 'game_type', false );
+
+		// Apply taxonomy map before setting genres — normalises raw provider terms and drops junk ones.
+		$raw_genres = isset( $data['genres'] ) ? LGD_Security::sanitize_string_list( $data['genres'] ) : array();
+		$genres     = array_values( array_unique( array_filter( array_map(
+			function( $g ) { return LGD_Taxonomy_Map::apply( 'game_genre', $g ); },
+			$raw_genres
+		) ) ) );
+		wp_set_object_terms( $game_id, $genres, 'game_genre', false );
+
 		wp_set_object_terms( $game_id, isset( $data['platforms'] ) ? LGD_Security::sanitize_string_list( $data['platforms'] ) : array(), 'game_platform', false );
-		wp_set_object_terms( $game_id, isset( $data['genres'] ) ? LGD_Security::sanitize_string_list( $data['genres'] ) : array(), 'game_genre', false );
 		if ( ! empty( $data['free_type'] ) ) { wp_set_object_terms( $game_id, sanitize_text_field( $data['free_type'] ), 'game_pricing', false ); }
 	}
 

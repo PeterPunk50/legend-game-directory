@@ -54,11 +54,14 @@ final class LGD_Taxonomy_Map {
 	}
 
 	/**
-	 * Normalize a term name for import. If a mapping exists, returns the canonical
-	 * term name from WordPress; otherwise returns the original $term_name.
+	 * Normalize a term name for import.
+	 * Returns the canonical term name if a mapping exists, empty string if the
+	 * canonical is '_drop_' (silently ignore this term), or the original $term_name
+	 * when no mapping is set.
 	 */
 	public static function apply( $taxonomy, $term_name ) {
 		$slug = self::canonical( $taxonomy, $term_name );
+		if ( '_drop_' === $slug ) { return ''; }
 		if ( $slug ) {
 			$term = get_term_by( 'slug', $slug, $taxonomy );
 			if ( $term ) { return $term->name; }
@@ -139,7 +142,7 @@ final class LGD_Taxonomy_Map {
 						<th><label for="lgd_map_can"><?php esc_html_e( 'Canonical slug', 'legend-game-directory' ); ?></label></th>
 						<td>
 							<input id="lgd_map_can" class="regular-text" name="canonical_slug" required placeholder="e.g. action">
-							<p class="description"><?php esc_html_e( 'The exact WordPress term slug from the approved list (e.g. action, rpg, free-games, permanently-free).', 'legend-game-directory' ); ?></p>
+							<p class="description"><?php esc_html_e( 'The exact WordPress term slug from the approved list (e.g. action, rpg, free-games). Use the special value _drop_ to silently ignore a raw term during import without creating it.', 'legend-game-directory' ); ?></p>
 						</td>
 					</tr>
 				</table>
