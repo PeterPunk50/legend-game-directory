@@ -200,7 +200,11 @@ final class LGD_AI_Adapter {
 		} );
 		$urls = array_unique( array_filter( $urls ) );
 		foreach ( (array) $data['source_claims'] as $claim ) {
-			if ( empty( $claim['claim'] ) || empty( $claim['source_url'] ) || ! in_array( esc_url_raw( $claim['source_url'] ), $urls, true ) ) {
+			if ( empty( $claim['claim'] ) || empty( $claim['source_url'] ) ) {
+				return new WP_Error( 'lgd_ai_unsupported_claim', __( 'AI output contains a malformed source claim.', 'legend-game-directory' ) );
+			}
+			// Only enforce URL-in-bundle check when the bundle has known source URLs to compare against.
+			if ( ! empty( $urls ) && ! in_array( esc_url_raw( $claim['source_url'] ), $urls, true ) ) {
 				return new WP_Error( 'lgd_ai_unsupported_claim', __( 'AI output contains a claim without a supplied source.', 'legend-game-directory' ) );
 			}
 		}
