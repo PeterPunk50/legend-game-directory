@@ -51,6 +51,13 @@ final class LGD_Post_Types {
 			'_lgd_score_breakdown' => 'object', '_lgd_missing_data' => 'array', '_lgd_provider_ids' => 'object',
 			'_lgd_mandatory_review_flags' => 'array', '_lgd_ai_prompt' => 'string', '_lgd_ai_generated_at' => 'string',
 			'_lgd_seo_title' => 'string', '_lgd_meta_description' => 'string',
+			// Monetization Grade (v0.1.12).
+			'_lgd_monetization_grade' => 'string', '_lgd_monetization_grade_override' => 'string',
+			'_lgd_monetization_grade_reason' => 'string',
+			// Granular verification dates (v0.1.12).
+			'_lgd_verified_source_check' => 'string', '_lgd_verified_price_check' => 'string',
+			'_lgd_verified_platform_check' => 'string', '_lgd_verified_monetization_check' => 'string',
+			'_lgd_verified_editorial_review' => 'string',
 		);
 	}
 

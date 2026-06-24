@@ -2,7 +2,7 @@
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
 final class LGD_Database {
-	const VERSION = '2';
+	const VERSION = '3';
 
 	public static function table( $suffix ) {
 		global $wpdb;
@@ -23,6 +23,10 @@ final class LGD_Database {
 				'facts longtext NULL',
 				'confidence decimal(5,2) NOT NULL DEFAULT 0',
 				"status varchar(32) NOT NULL DEFAULT 'active'",
+				"source_type varchar(64) NOT NULL DEFAULT ''",
+				"trust_level varchar(16) NOT NULL DEFAULT 'medium'",
+				'fields_supported text NULL',
+				'notes text NULL',
 				'PRIMARY KEY  (id)',
 				'UNIQUE KEY provider_external (provider,external_id)',
 				'KEY game_id (game_id)',

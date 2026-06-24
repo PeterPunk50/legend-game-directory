@@ -25,6 +25,8 @@ final class LGD_Plugin {
 			'includes/providers/class-lgd-provider-official-site.php',
 			'includes/class-lgd-rating-engine.php', 'includes/class-lgd-ai-adapter.php',
 			'includes/class-lgd-artwork-fetcher.php',
+			'includes/class-lgd-monetization.php',
+			'includes/class-lgd-taxonomy-map.php',
 			'includes/class-lgd-importer.php', 'includes/class-lgd-scheduler.php',
 			'includes/class-lgd-reviews.php', 'includes/class-lgd-comparison.php',
 			'includes/class-lgd-engagement.php', 'includes/class-lgd-seo.php',
@@ -41,6 +43,7 @@ final class LGD_Plugin {
 		$this->booted = true;
 		self::load_files();
 		new LGD_Post_Types();
+		new LGD_Taxonomy_Map();
 		new LGD_Provider_Registry();
 		new LGD_Scheduler();
 		new LGD_Reviews();

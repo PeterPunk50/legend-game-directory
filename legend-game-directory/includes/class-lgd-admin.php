@@ -11,6 +11,9 @@ final class LGD_Admin {
 		add_action( 'admin_post_lgd_import', array( $this, 'import' ) );
 		add_action( 'admin_post_lgd_seed_starters', array( $this, 'seed_starters' ) );
 		add_action( 'admin_post_lgd_fetch_artwork', array( $this, 'fetch_artwork' ) );
+		add_action( 'admin_post_lgd_recalc_grade', array( $this, 'recalc_grade' ) );
+		add_action( 'admin_post_lgd_recalc_all_grades', array( $this, 'recalc_all_grades' ) );
+		add_action( 'save_post_game', array( $this, 'auto_grade' ), 20, 1 );
 	}
 
 	public static function add_capabilities() {
@@ -26,16 +29,72 @@ final class LGD_Admin {
 	}
 
 	public function dashboard() {
-		global $wpdb; $counts = wp_count_posts( 'game' );
+		global $wpdb;
+		$counts  = wp_count_posts( 'game' );
+		$pub     = isset( $counts->publish ) ? (int) $counts->publish : 0;
+		$cutoff  = gmdate( 'Y-m-d', strtotime( '-90 days' ) );
+
+		$rating_pending = count( get_posts( array(
+			'post_type' => 'game', 'post_status' => 'publish', 'posts_per_page' => -1, 'fields' => 'ids',
+			'meta_query' => array( 'relation' => 'OR',
+				array( 'key' => '_lgd_automated_score', 'compare' => 'NOT EXISTS' ),
+				array( 'key' => '_lgd_automated_score', 'value' => '', 'compare' => '=' ),
+			),
+		) ) );
+		$grade_pending = count( get_posts( array(
+			'post_type' => 'game', 'post_status' => 'publish', 'posts_per_page' => -1, 'fields' => 'ids',
+			'meta_query' => array( 'relation' => 'OR',
+				array( 'key' => '_lgd_monetization_grade', 'compare' => 'NOT EXISTS' ),
+				array( 'key' => '_lgd_monetization_grade', 'value' => 'Pending' ),
+				array( 'key' => '_lgd_monetization_grade', 'value' => '' ),
+			),
+		) ) );
+		$outdated = count( get_posts( array(
+			'post_type' => 'game', 'post_status' => 'publish', 'posts_per_page' => -1, 'fields' => 'ids',
+			'meta_query' => array( array( 'key' => '_lgd_last_verified', 'value' => $cutoff, 'compare' => '<', 'type' => 'DATE' ) ),
+		) ) );
+		$unverified = count( get_posts( array(
+			'post_type' => 'game', 'post_status' => 'publish', 'posts_per_page' => -1, 'fields' => 'ids',
+			'meta_query' => array( array( 'key' => '_lgd_last_verified', 'compare' => 'NOT EXISTS' ) ),
+		) ) );
+
 		$cards = array(
-			__( 'Free Games', 'legend-game-directory' ) => $this->term_count( 'game_type', 'free-games' ), __( 'Indie Games', 'legend-game-directory' ) => $this->term_count( 'game_type', 'indie-games' ),
-			__( 'Mobile Games', 'legend-game-directory' ) => $this->term_count( 'game_type', 'mobile-games' ), __( 'Pending Approvals', 'legend-game-directory' ) => isset( $counts->pending ) ? $counts->pending : 0,
+			__( 'Published Games', 'legend-game-directory' )    => $pub,
+			__( 'Free Games', 'legend-game-directory' )         => $this->term_count( 'game_type', 'free-games' ),
+			__( 'Indie Games', 'legend-game-directory' )        => $this->term_count( 'game_type', 'indie-games' ),
+			__( 'Mobile Games', 'legend-game-directory' )       => $this->term_count( 'game_type', 'mobile-games' ),
+			__( 'Rating Pending', 'legend-game-directory' )     => $rating_pending,
+			__( 'Grade Pending', 'legend-game-directory' )      => $grade_pending,
+			__( 'Outdated Verification', 'legend-game-directory' ) => $outdated,
+			__( 'Unverified', 'legend-game-directory' )         => $unverified,
+			__( 'Pending Approvals', 'legend-game-directory' )  => isset( $counts->pending ) ? $counts->pending : 0,
 			__( 'Failed/Broken Sources', 'legend-game-directory' ) => (int) $wpdb->get_var( 'SELECT COUNT(*) FROM ' . LGD_Database::table( 'sources' ) . " WHERE status<>'active'" ),
 			__( 'Low-confidence Records', 'legend-game-directory' ) => count( get_posts( array( 'post_type' => 'game', 'post_status' => 'any', 'posts_per_page' => -1, 'fields' => 'ids', 'meta_query' => array( array( 'key' => '_lgd_confidence', 'value' => 60, 'compare' => '<', 'type' => 'NUMERIC' ) ) ) ) ),
 		);
-		$daily = wp_parse_args( get_option( 'lgd_ai_usage_' . gmdate( 'Ymd' ), array() ), array( 'requests' => 0 ) ); $monthly = wp_parse_args( get_option( 'lgd_ai_usage_' . gmdate( 'Ym' ), array() ), array( 'cost' => 0 ) );
-		?><div class="wrap lgd-admin"><h1><?php esc_html_e( 'Legend Game Directory', 'legend-game-directory' ); ?></h1><div class="lgd-admin-cards"><?php foreach ( $cards as $label => $value ) : ?><div class="lgd-admin-card"><strong><?php echo esc_html( number_format_i18n( $value ) ); ?></strong><span><?php echo esc_html( $label ); ?></span></div><?php endforeach; ?><div class="lgd-admin-card"><strong><?php echo esc_html( $daily['requests'] ); ?></strong><span><?php esc_html_e( 'AI Requests Today', 'legend-game-directory' ); ?></span></div><div class="lgd-admin-card"><strong><?php echo esc_html( number_format_i18n( $monthly['cost'], 2 ) ); ?></strong><span><?php esc_html_e( 'Estimated AI Cost This Month', 'legend-game-directory' ); ?></span></div></div>
-		<h2><?php esc_html_e( 'Source Health', 'legend-game-directory' ); ?></h2><?php $health = get_option( 'lgd_provider_health', array() ); ?><pre><?php echo esc_html( wp_json_encode( $health, JSON_PRETTY_PRINT ) ); ?></pre></div><?php
+		$daily   = wp_parse_args( get_option( 'lgd_ai_usage_' . gmdate( 'Ymd' ), array() ), array( 'requests' => 0 ) );
+		$monthly = wp_parse_args( get_option( 'lgd_ai_usage_' . gmdate( 'Ym' ), array() ), array( 'cost' => 0 ) );
+		?>
+		<div class="wrap lgd-admin">
+		<h1><?php esc_html_e( 'Legend Game Directory', 'legend-game-directory' ); ?></h1>
+		<div class="lgd-admin-cards">
+			<?php foreach ( $cards as $label => $value ) : ?>
+			<div class="lgd-admin-card"><strong><?php echo esc_html( number_format_i18n( $value ) ); ?></strong><span><?php echo esc_html( $label ); ?></span></div>
+			<?php endforeach; ?>
+			<div class="lgd-admin-card"><strong><?php echo esc_html( $daily['requests'] ); ?></strong><span><?php esc_html_e( 'AI Requests Today', 'legend-game-directory' ); ?></span></div>
+			<div class="lgd-admin-card"><strong><?php echo esc_html( number_format_i18n( $monthly['cost'], 2 ) ); ?></strong><span><?php esc_html_e( 'Est. AI Cost This Month ($)', 'legend-game-directory' ); ?></span></div>
+		</div>
+		<p>
+			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="display:inline">
+				<?php wp_nonce_field( 'lgd_recalc_all_grades' ); ?>
+				<input type="hidden" name="action" value="lgd_recalc_all_grades">
+				<button class="button button-secondary"><?php esc_html_e( 'Recalculate All Monetization Grades', 'legend-game-directory' ); ?></button>
+			</form>
+		</p>
+		<h2><?php esc_html_e( 'Source Health', 'legend-game-directory' ); ?></h2>
+		<?php $health = get_option( 'lgd_provider_health', array() ); ?>
+		<pre><?php echo esc_html( wp_json_encode( $health, JSON_PRETTY_PRINT ) ); ?></pre>
+		</div>
+		<?php
 	}
 
 	private function term_count( $taxonomy, $slug ) { $term = get_term_by( 'slug', $slug, $taxonomy ); return $term ? (int) $term->count : 0; }
@@ -108,7 +167,16 @@ final class LGD_Admin {
 
 	public function meta_box() { add_meta_box( 'lgd_game_details', __( 'Legend Game Details', 'legend-game-directory' ), array( $this, 'render_meta_box' ), 'game', 'normal', 'high' ); }
 	public function render_meta_box( $post ) {
-		wp_nonce_field( 'lgd_save_game', 'lgd_game_nonce' ); $fields = array( '_lgd_developer' => 'Developer', '_lgd_publisher' => 'Publisher', '_lgd_official_website' => 'Official website', '_lgd_steam_url' => 'Steam URL', '_lgd_google_play_url' => 'Google Play URL', '_lgd_apple_app_store_url' => 'Apple App Store URL', '_lgd_current_price' => 'Current price', '_lgd_currency' => 'Currency', '_lgd_editorial_score' => 'Editorial score (0–100)', '_lgd_external_critic_score' => 'External critic score (0–100)', '_lgd_external_user_score' => 'External user score (0–100)', '_lgd_confidence' => 'Confidence (0–100)' );
+		wp_nonce_field( 'lgd_save_game', 'lgd_game_nonce' );
+		$fields = array(
+			'_lgd_developer' => 'Developer', '_lgd_publisher' => 'Publisher',
+			'_lgd_official_website' => 'Official website', '_lgd_steam_url' => 'Steam URL',
+			'_lgd_google_play_url' => 'Google Play URL', '_lgd_apple_app_store_url' => 'Apple App Store URL',
+			'_lgd_current_price' => 'Current price', '_lgd_currency' => 'Currency',
+			'_lgd_in_app_purchases' => 'In-app purchases', '_lgd_advertising' => 'Advertising',
+			'_lgd_editorial_score' => 'Editorial score (0–100)', '_lgd_external_critic_score' => 'External critic score (0–100)',
+			'_lgd_external_user_score' => 'External user score (0–100)', '_lgd_confidence' => 'Confidence (0–100)',
+		);
 		echo '<table class="form-table">';
 		foreach ( $fields as $key => $label ) {
 			echo '<tr><th><label for="' . esc_attr( $key ) . '">' . esc_html( $label ) . '</label></th><td><input class="regular-text" id="' . esc_attr( $key ) . '" name="lgd_meta[' . esc_attr( $key ) . ']" value="' . esc_attr( get_post_meta( $post->ID, $key, true ) ) . '">';
@@ -123,10 +191,81 @@ final class LGD_Admin {
 			echo '</td></tr>';
 		}
 		echo '</table>';
-		// Admin notice if message was passed back.
+
+		// Monetization Grade panel.
+		$calculated = LGD_Monetization::calculate( $post->ID );
+		$stored     = get_post_meta( $post->ID, '_lgd_monetization_grade', true );
+		$override   = get_post_meta( $post->ID, '_lgd_monetization_grade_override', true );
+		$reason     = get_post_meta( $post->ID, '_lgd_monetization_grade_reason', true );
+		$recalc_url = wp_nonce_url( add_query_arg( array( 'action' => 'lgd_recalc_grade', 'post_id' => $post->ID ), admin_url( 'admin-post.php' ) ), 'lgd_recalc_grade_' . $post->ID );
+		?>
+		<h3 style="margin-top:18px"><?php esc_html_e( 'Monetization Grade', 'legend-game-directory' ); ?></h3>
+		<table class="form-table">
+			<tr>
+				<th><?php esc_html_e( 'Calculated grade', 'legend-game-directory' ); ?></th>
+				<td>
+					<strong style="font-size:1.4em"><?php echo esc_html( $calculated ); ?></strong>
+					&nbsp;— <?php echo esc_html( LGD_Monetization::label( $calculated ) ); ?>
+					&nbsp;<a href="<?php echo esc_url( $recalc_url ); ?>" class="button button-small"><?php esc_html_e( 'Recalculate', 'legend-game-directory' ); ?></a>
+					<?php if ( $stored && $stored !== $calculated ) : ?>
+						<br><span style="color:#b32d2e"><?php echo esc_html( sprintf( __( 'Stored grade is "%s" — click Recalculate to update.', 'legend-game-directory' ), $stored ) ); ?></span>
+					<?php endif; ?>
+				</td>
+			</tr>
+			<tr>
+				<th><label for="lgd_grade_override"><?php esc_html_e( 'Manual override', 'legend-game-directory' ); ?></label></th>
+				<td>
+					<select id="lgd_grade_override" name="lgd_meta[_lgd_monetization_grade_override]">
+						<option value=""><?php esc_html_e( '— Use calculated grade —', 'legend-game-directory' ); ?></option>
+						<?php foreach ( LGD_Monetization::GRADES as $g ) : ?>
+							<option value="<?php echo esc_attr( $g ); ?>" <?php selected( $override, $g ); ?>><?php echo esc_html( $g . ' — ' . LGD_Monetization::label( $g ) ); ?></option>
+						<?php endforeach; ?>
+					</select>
+					<p class="description"><?php esc_html_e( 'Override only when evidence is conclusive. Requires a reason.', 'legend-game-directory' ); ?></p>
+				</td>
+			</tr>
+			<tr>
+				<th><label for="lgd_grade_reason"><?php esc_html_e( 'Override reason', 'legend-game-directory' ); ?></label></th>
+				<td>
+					<input class="large-text" id="lgd_grade_reason" name="lgd_meta[_lgd_monetization_grade_reason]" value="<?php echo esc_attr( $reason ); ?>" placeholder="<?php esc_attr_e( 'e.g. Confirmed pay-to-win mechanics per official patch notes.', 'legend-game-directory' ); ?>">
+				</td>
+			</tr>
+		</table>
+
+		<h3 style="margin-top:18px"><?php esc_html_e( 'Verification Dates', 'legend-game-directory' ); ?></h3>
+		<p class="description"><?php esc_html_e( 'Update these only after actively checking the relevant information. Do not update on every save.', 'legend-game-directory' ); ?></p>
+		<table class="form-table">
+			<?php
+			$verify_fields = array(
+				'_lgd_last_verified'              => 'Overall last verified',
+				'_lgd_verified_source_check'      => 'Sources last checked',
+				'_lgd_verified_price_check'       => 'Price last checked',
+				'_lgd_verified_platform_check'    => 'Platforms last checked',
+				'_lgd_verified_monetization_check' => 'Monetization last checked',
+				'_lgd_verified_editorial_review'  => 'Editorial review date',
+			);
+			foreach ( $verify_fields as $key => $label ) :
+				$val = get_post_meta( $post->ID, $key, true );
+			?>
+			<tr>
+				<th><label for="<?php echo esc_attr( $key ); ?>"><?php echo esc_html( $label ); ?></label></th>
+				<td>
+					<input type="date" id="<?php echo esc_attr( $key ); ?>" name="lgd_meta[<?php echo esc_attr( $key ); ?>]" value="<?php echo esc_attr( $val ); ?>" class="regular-text">
+					<?php if ( $val ) :
+						$fs = LGD_Monetization::freshness( $post->ID );
+						echo '<span class="lgd-admin-freshness lgd-fresh-' . esc_attr( $fs ) . '">' . esc_html( LGD_Monetization::freshness_label( $fs ) ) . '</span>';
+					endif; ?>
+				</td>
+			</tr>
+			<?php endforeach; ?>
+		</table>
+		<?php
 		if ( ! empty( $_GET['lgd_aw'] ) ) {
 			$msg = 'ok' === $_GET['lgd_aw'] ? __( 'Artwork fetched and stored.', 'legend-game-directory' ) : __( 'No artwork found on that page.', 'legend-game-directory' );
 			echo '<p class="' . ( 'ok' === $_GET['lgd_aw'] ? 'updated' : 'error' ) . '" style="padding:4px 8px">' . esc_html( $msg ) . '</p>';
+		}
+		if ( ! empty( $_GET['lgd_grade'] ) ) {
+			echo '<div class="notice notice-success is-dismissible" style="margin:8px 0"><p>' . esc_html( sprintf( __( 'Monetization grade recalculated: %s.', 'legend-game-directory' ), esc_html( get_post_meta( $post->ID, '_lgd_monetization_grade', true ) ) ) ) . '</p></div>';
 		}
 	}
 
@@ -147,5 +286,29 @@ final class LGD_Admin {
 			update_post_meta( $post_id, $key, LGD_Post_Types::sanitize_meta( wp_unslash( $value ), $key, 'post' ) );
 		}
 		LGD_Logger::log( 'manual_game_update', 'Game fields updated manually.', array(), 'info', 'game', $post_id );
+	}
+
+	/** Auto-recalculate monetization grade after any game save (priority 20, after meta is saved). */
+	public function auto_grade( $post_id ) {
+		if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) { return; }
+		if ( ! current_user_can( 'edit_post', $post_id ) ) { return; }
+		LGD_Monetization::save( $post_id );
+	}
+
+	public function recalc_grade() {
+		$post_id = absint( isset( $_GET['post_id'] ) ? $_GET['post_id'] : 0 );
+		if ( ! $post_id || ! current_user_can( 'edit_post', $post_id ) ) { wp_die( esc_html__( 'Permission denied.', 'legend-game-directory' ) ); }
+		check_admin_referer( 'lgd_recalc_grade_' . $post_id );
+		LGD_Monetization::save( $post_id );
+		LGD_Logger::log( 'grade_recalculated', 'Monetization grade recalculated manually.', array( 'grade' => get_post_meta( $post_id, '_lgd_monetization_grade', true ) ), 'info', 'game', $post_id );
+		wp_safe_redirect( add_query_arg( array( 'action' => 'edit', 'post' => $post_id, 'lgd_grade' => 1 ), admin_url( 'post.php' ) ) ); exit;
+	}
+
+	public function recalc_all_grades() {
+		check_admin_referer( 'lgd_recalc_all_grades' );
+		if ( ! current_user_can( 'manage_options' ) ) { wp_die( esc_html__( 'Permission denied.', 'legend-game-directory' ) ); }
+		$count = LGD_Monetization::recalc_all();
+		LGD_Logger::log( 'grades_recalculated_all', "Monetization grades recalculated for {$count} games.", array( 'count' => $count ) );
+		wp_safe_redirect( add_query_arg( array( 'post_type' => 'game', 'page' => 'lgd-dashboard', 'lgd_recalc' => $count ), admin_url( 'edit.php' ) ) ); exit;
 	}
 }
