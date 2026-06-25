@@ -118,6 +118,38 @@ $grade  = get_post_meta( $id, '_lgd_monetization_grade', true ) ?: 'Pending';
 
 		<section class="lgd-section"><h2><?php esc_html_e( 'Similar Games', 'legend-game-directory' ); ?></h2><?php $genres = wp_get_post_terms( $id, 'game_genre', array( 'fields' => 'slugs' ) ); echo do_shortcode( '[lgd_game_grid limit="3" genre="' . esc_attr( isset( $genres[0] ) ? $genres[0] : '' ) . '"]' ); ?></section>
 
+		<?php
+		$game_guides = new WP_Query( array(
+			'post_type'      => 'game_guide',
+			'post_status'    => 'publish',
+			'posts_per_page' => 3,
+			'meta_query'     => array( array( 'key' => '_lgd_guide_game_id', 'value' => $id, 'type' => 'NUMERIC' ) ),
+		) );
+		if ( $game_guides->have_posts() ) : ?>
+		<section class="lgd-section">
+			<div class="lgd-home-heading">
+				<h2><?php esc_html_e( 'Guides for This Game', 'legend-game-directory' ); ?></h2>
+				<a href="<?php echo esc_url( get_post_type_archive_link( 'game_guide' ) ); ?>"><?php esc_html_e( 'All guides', 'legend-game-directory' ); ?> &rarr;</a>
+			</div>
+			<div class="lgd-game-guides-grid">
+				<?php while ( $game_guides->have_posts() ) : $game_guides->the_post();
+					$guide_types = wp_get_post_terms( get_the_ID(), 'guide_type', array( 'fields' => 'names' ) );
+					$read_time   = (int) get_post_meta( get_the_ID(), '_lgd_guide_reading_time', true );
+					$g_diff      = get_post_meta( get_the_ID(), '_lgd_guide_difficulty', true );
+				?>
+				<a class="lgd-game-guides-card" href="<?php the_permalink(); ?>">
+					<?php if ( ! empty( $guide_types[0] ) ) : ?><span class="lgd-game-guides-card__type"><?php echo esc_html( $guide_types[0] ); ?></span><?php endif; ?>
+					<p class="lgd-game-guides-card__title"><?php the_title(); ?></p>
+					<span class="lgd-game-guides-card__meta">
+						<?php if ( $g_diff ) : ?><?php echo esc_html( $g_diff ); ?><?php endif; ?>
+						<?php if ( $read_time ) : ?> &middot; <?php echo esc_html( $read_time . ' min' ); ?><?php endif; ?>
+					</span>
+				</a>
+				<?php endwhile; wp_reset_postdata(); ?>
+			</div>
+		</section>
+		<?php endif; ?>
+
 		<section class="lgd-section lgd-panel"><h2><?php esc_html_e( 'Report Incorrect Information', 'legend-game-directory' ); ?></h2><?php echo do_shortcode( '[lgd_report_game game_id="' . $id . '"]' ); ?></section>
 
 	</div>

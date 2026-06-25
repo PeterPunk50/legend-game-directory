@@ -1,0 +1,92 @@
+/* Legend Game Directory — Guide styles */
+
+/* ── Filter tabs ── */
+.lgd-filter-tabs{display:flex;flex-wrap:wrap;gap:8px;margin-top:24px}
+.lgd-filter-tab{padding:9px 16px;border-radius:999px;border:1px solid var(--lgd-border);text-decoration:none;color:var(--lgd-muted);font-size:.88rem;transition:border-color .18s,color .18s}
+.lgd-filter-tab:hover,.lgd-filter-tab.is-active{border-color:var(--lgd-cyan);color:var(--lgd-cyan);background:rgba(49,215,255,.08)}
+
+/* ── Guide grid (archive) ── */
+.lgd-guide-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px;padding:28px 0}
+.lgd-guide-card{background:linear-gradient(180deg,var(--lgd-panel-2),var(--lgd-panel));border:1px solid var(--lgd-border);border-radius:18px;overflow:hidden;box-shadow:0 15px 40px rgba(0,0,0,.2)}
+.lgd-guide-card__image{display:block;aspect-ratio:16/9;overflow:hidden}
+.lgd-guide-card__image img{width:100%;height:100%;object-fit:cover}
+.lgd-guide-card__body{padding:18px}
+.lgd-guide-card__title{font-size:1.15rem;margin:10px 0 4px}
+.lgd-guide-card__title a{color:var(--lgd-text);text-decoration:none}
+.lgd-guide-card__title a:hover{color:var(--lgd-cyan)}
+.lgd-guide-card__game{color:var(--lgd-cyan);font-size:.9rem;margin:0 0 8px}
+.lgd-guide-card__game a{color:inherit;text-decoration:none}
+.lgd-guide-card__excerpt{color:var(--lgd-muted);font-size:.9rem;margin:0 0 12px}
+.lgd-guide-card__meta{display:flex;gap:14px;color:var(--lgd-muted);font-size:.8rem}
+@media(prefers-reduced-motion:no-preference){.lgd-guide-card{transition:transform .18s ease,border-color .18s ease}.lgd-guide-card:hover{transform:translateY(-4px);border-color:rgba(49,215,255,.45)}}
+
+/* ── Difficulty badges ── */
+.lgd-badge-diff{font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;padding:5px 9px;border-radius:999px;border:1px solid}
+.lgd-diff-beginner{background:rgba(78,229,168,.1);color:var(--lgd-green);border-color:rgba(78,229,168,.3)}
+.lgd-diff-intermediate{background:rgba(240,192,80,.1);color:#f0c050;border-color:rgba(240,192,80,.3)}
+.lgd-diff-advanced{background:rgba(255,117,151,.1);color:var(--lgd-danger);border-color:rgba(255,117,151,.3)}
+
+/* ── Single guide hero ── */
+.lgd-guide-hero{padding:60px 0 30px;background:radial-gradient(circle at 15% 10%,rgba(49,215,255,.14),transparent 36%),radial-gradient(circle at 85% 20%,rgba(168,117,255,.15),transparent 38%),var(--lgd-bg)}
+.lgd-guide-hero h1{font-size:clamp(1.8rem,4.5vw,3.4rem);line-height:1.08;margin:.4em 0 .2em}
+.lgd-guide-game-name{color:var(--lgd-muted);font-size:1rem;margin:.2em 0}
+.lgd-guide-game-name a{color:var(--lgd-cyan);text-decoration:none}
+.lgd-guide-meta{display:flex;gap:18px;color:var(--lgd-muted);font-size:.85rem;margin-top:10px}
+.lgd-guide-meta span+span::before{content:"·";margin-right:18px}
+
+/* ── Single guide layout ── */
+.lgd-guide-layout{display:grid;grid-template-columns:1fr 320px;gap:36px;padding:36px 0 60px;align-items:start}
+.lgd-guide-content{min-width:0}
+
+/* ── Key points ── */
+.lgd-guide-key-points{background:var(--lgd-panel);border:1px solid var(--lgd-border);border-left:4px solid var(--lgd-cyan);border-radius:12px;padding:20px 22px;margin:0 0 28px}
+.lgd-guide-key-points strong{display:block;font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;color:var(--lgd-cyan);margin-bottom:12px}
+.lgd-guide-key-points ul{margin:0;padding:0 0 0 18px;color:var(--lgd-text)}
+.lgd-guide-key-points li{margin-bottom:6px}
+
+/* ── Guide body content ── */
+.lgd-guide-body{color:var(--lgd-text);line-height:1.7;font-size:1.05rem}
+.lgd-guide-body h2,.lgd-guide-body h3{margin-top:2em;margin-bottom:.6em}
+.lgd-guide-body h2{font-size:1.5rem;border-bottom:1px solid var(--lgd-border);padding-bottom:.4em}
+.lgd-guide-body h3{font-size:1.2rem;color:var(--lgd-cyan)}
+.lgd-guide-body ul,.lgd-guide-body ol{padding-left:22px;margin-bottom:1em}
+.lgd-guide-body li{margin-bottom:.4em}
+.lgd-guide-body p{margin-bottom:1.1em}
+.lgd-guide-body img{max-width:100%;border-radius:10px;margin:16px 0}
+.lgd-guide-body a{color:var(--lgd-cyan)}
+.lgd-guide-body blockquote{border-left:3px solid var(--lgd-purple);margin:1.2em 0;padding:.6em 1em;color:var(--lgd-muted);font-style:italic}
+.lgd-guide-body code{background:rgba(255,255,255,.08);padding:2px 6px;border-radius:5px;font-size:.9em}
+.lgd-guide-body pre{background:rgba(255,255,255,.06);border:1px solid var(--lgd-border);border-radius:10px;padding:16px;overflow:auto;margin:1em 0}
+
+/* ── Ad slots ── */
+.lgd-ad-slot{min-height:90px;background:rgba(255,255,255,.03);border:1px dashed var(--lgd-border);border-radius:10px;margin:24px 0;display:flex;align-items:center;justify-content:center;color:var(--lgd-muted);font-size:.75rem}
+.lgd-ad-slot:empty::after{content:"[ Ad slot ]";pointer-events:none}
+.lgd-ad-slot--guide-sidebar{min-height:250px}
+
+/* ── Affiliate CTA ── */
+.lgd-guide-cta{margin:32px 0;text-align:center}
+.lgd-button--cta{display:inline-block;font-size:1.1rem;padding:16px 28px;text-decoration:none;background:linear-gradient(135deg,var(--lgd-cyan),var(--lgd-purple));color:#07111f;font-weight:900;border-radius:12px}
+.lgd-guide-cta__disclosure{color:var(--lgd-muted);font-size:.78rem;margin-top:8px}
+
+/* ── Sidebar ── */
+.lgd-guide-sidebar__panel{background:var(--lgd-panel);border:1px solid var(--lgd-border);border-radius:14px;padding:20px;margin-bottom:20px}
+.lgd-guide-sidebar__panel h3{font-size:1rem;margin:0 0 14px;color:var(--lgd-muted);text-transform:uppercase;letter-spacing:.05em;font-size:.8rem}
+.lgd-guide-game-thumb{width:100%;border-radius:8px;margin-bottom:10px}
+.lgd-guide-game-panel p{font-size:.9rem;color:var(--lgd-text);margin:.4em 0}
+.lgd-related-guides-list{list-style:none;padding:0;margin:0}
+.lgd-related-guides-list li{padding:8px 0;border-bottom:1px solid var(--lgd-border)}
+.lgd-related-guides-list li:last-child{border-bottom:0}
+.lgd-related-guides-list a{color:var(--lgd-text);text-decoration:none;font-size:.9rem}
+.lgd-related-guides-list a:hover{color:var(--lgd-cyan)}
+
+/* ── Related guides on game page ── */
+.lgd-game-guides-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.lgd-game-guides-card{background:var(--lgd-panel);border:1px solid var(--lgd-border);border-radius:12px;padding:16px;text-decoration:none;display:block;transition:border-color .18s}
+.lgd-game-guides-card:hover{border-color:rgba(49,215,255,.4)}
+.lgd-game-guides-card__type{font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--lgd-cyan);margin-bottom:6px;display:block}
+.lgd-game-guides-card__title{color:var(--lgd-text);font-size:.95rem;font-weight:700;margin:0 0 4px}
+.lgd-game-guides-card__meta{color:var(--lgd-muted);font-size:.8rem}
+
+/* ── Responsive ── */
+@media(max-width:900px){.lgd-guide-grid{grid-template-columns:repeat(2,1fr)}.lgd-guide-layout{grid-template-columns:1fr}.lgd-guide-sidebar{display:contents}.lgd-guide-sidebar__panel{margin-top:24px}.lgd-game-guides-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:560px){.lgd-guide-grid,.lgd-game-guides-grid{grid-template-columns:1fr}.lgd-filter-tabs{gap:6px}.lgd-filter-tab{font-size:.8rem;padding:7px 12px}}

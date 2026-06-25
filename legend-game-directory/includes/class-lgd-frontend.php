@@ -24,25 +24,39 @@ final class LGD_Frontend {
 			wp_enqueue_script( 'lgd-public', LGD_URL . 'assets/js/public.js', array(), LGD_VERSION, true );
 			wp_localize_script( 'lgd-public', 'LGD', array( 'nonce' => wp_create_nonce( 'wp_rest' ), 'compareUrl' => add_query_arg( 'games', '', get_post_type_archive_link( 'game' ) ) . '#compare' ) );
 		}
+		if ( is_post_type_archive( 'game_guide' ) || is_singular( 'game_guide' ) || is_singular( 'game' ) ) {
+			wp_enqueue_style( 'lgd-public', LGD_URL . 'assets/css/public.css', array(), LGD_VERSION );
+			wp_enqueue_style( 'lgd-guides', LGD_URL . 'assets/css/guides.css', array( 'lgd-public' ), LGD_VERSION );
+		}
 		if ( is_admin() ) { wp_enqueue_style( 'lgd-admin', LGD_URL . 'assets/css/admin.css', array(), LGD_VERSION ); }
 	}
 
 	public function templates( $template ) {
 		if ( is_singular( 'game' ) && false === strpos( wp_normalize_path( $template ), 'single-game.php' ) ) { return LGD_PATH . 'templates/single-game.php'; }
 		if ( is_post_type_archive( 'game' ) && false === strpos( wp_normalize_path( $template ), 'archive-game.php' ) ) { return LGD_PATH . 'templates/archive-game.php'; }
+		if ( is_singular( 'game_guide' ) && false === strpos( wp_normalize_path( $template ), 'single-game_guide.php' ) ) { return LGD_PATH . 'templates/single-game_guide.php'; }
+		if ( is_post_type_archive( 'game_guide' ) && false === strpos( wp_normalize_path( $template ), 'archive-game_guide.php' ) ) { return LGD_PATH . 'templates/archive-game_guide.php'; }
 		return $template;
 	}
 
 	public function filters( $query ) {
-		if ( is_admin() || ! $query->is_main_query() || ! ( $query->is_post_type_archive( 'game' ) || $query->is_tax( array( 'game_type', 'game_platform', 'game_genre', 'game_pricing' ) ) ) ) { return; }
-		$query->set( 'posts_per_page', 24 );
-		$tax_query = array();
-		foreach ( array( 'type' => 'game_type', 'platform' => 'game_platform', 'genre' => 'game_genre', 'pricing' => 'game_pricing' ) as $param => $taxonomy ) {
-			if ( ! empty( $_GET[ $param ] ) ) { $tax_query[] = array( 'taxonomy' => $taxonomy, 'field' => 'slug', 'terms' => sanitize_title( wp_unslash( $_GET[ $param ] ) ) ); }
+		if ( is_admin() || ! $query->is_main_query() ) { return; }
+		if ( $query->is_post_type_archive( 'game' ) || $query->is_tax( array( 'game_type', 'game_platform', 'game_genre', 'game_pricing' ) ) ) {
+			$query->set( 'posts_per_page', 24 );
+			$tax_query = array();
+			foreach ( array( 'type' => 'game_type', 'platform' => 'game_platform', 'genre' => 'game_genre', 'pricing' => 'game_pricing' ) as $param => $taxonomy ) {
+				if ( ! empty( $_GET[ $param ] ) ) { $tax_query[] = array( 'taxonomy' => $taxonomy, 'field' => 'slug', 'terms' => sanitize_title( wp_unslash( $_GET[ $param ] ) ) ); }
+			}
+			if ( $tax_query ) { $query->set( 'tax_query', $tax_query ); }
+			if ( isset( $_GET['rating'] ) && is_numeric( $_GET['rating'] ) ) { $query->set( 'meta_query', array( array( 'key' => '_lgd_automated_score', 'value' => (float) $_GET['rating'], 'compare' => '>=', 'type' => 'NUMERIC' ) ) ); }
+			if ( ! empty( $_GET['keyword'] ) ) { $query->set( 's', sanitize_text_field( wp_unslash( $_GET['keyword'] ) ) ); }
 		}
-		if ( $tax_query ) { $query->set( 'tax_query', $tax_query ); }
-		if ( isset( $_GET['rating'] ) && is_numeric( $_GET['rating'] ) ) { $query->set( 'meta_query', array( array( 'key' => '_lgd_automated_score', 'value' => (float) $_GET['rating'], 'compare' => '>=', 'type' => 'NUMERIC' ) ) ); }
-		if ( ! empty( $_GET['keyword'] ) ) { $query->set( 's', sanitize_text_field( wp_unslash( $_GET['keyword'] ) ) ); }
+		if ( $query->is_post_type_archive( 'game_guide' ) ) {
+			$query->set( 'posts_per_page', 12 );
+			if ( ! empty( $_GET['guide_type'] ) ) {
+				$query->set( 'tax_query', array( array( 'taxonomy' => 'guide_type', 'field' => 'slug', 'terms' => sanitize_title( wp_unslash( $_GET['guide_type'] ) ) ) ) );
+			}
+		}
 	}
 
 	public function routes() {

@@ -31,6 +31,8 @@ final class LGD_Plugin {
 			'includes/class-lgd-reviews.php', 'includes/class-lgd-comparison.php',
 			'includes/class-lgd-engagement.php', 'includes/class-lgd-seo.php',
 			'includes/class-lgd-admin.php', 'includes/class-lgd-frontend.php',
+				'includes/class-lgd-guide-post-types.php',
+				'includes/class-lgd-guide-admin.php',
 		);
 	}
 
@@ -52,6 +54,8 @@ final class LGD_Plugin {
 		new LGD_SEO();
 		new LGD_Admin();
 		new LGD_Frontend();
+		new LGD_Guide_Post_Types();
+		new LGD_Guide_Admin();
 		add_action( 'admin_init', array( 'LGD_Database', 'maybe_upgrade' ) );
 		add_action( 'init', array( 'LGD_AI_Adapter', 'ensure_provider_credentials' ), 6 );
 	}
@@ -61,6 +65,9 @@ final class LGD_Plugin {
 		LGD_Database::install();
 		LGD_Post_Types::register_all();
 		LGD_Post_Types::seed_terms();
+		LGD_Guide_Post_Types::register_all();
+		LGD_Guide_Post_Types::seed_guide_types();
+		LGD_Guide_Post_Types::add_capabilities();
 		LGD_Admin::add_capabilities();
 		LGD_Scheduler::schedule_all();
 		flush_rewrite_rules();
