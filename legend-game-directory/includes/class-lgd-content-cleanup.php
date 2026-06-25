@@ -212,7 +212,8 @@ final class LGD_Content_Cleanup {
 
 		$done = 0; $skipped = 0; $failed = 0; $processed = 0;
 		foreach ( $ids as $game_id ) {
-			if ( $processed >= $limit && empty( $assoc['game'] ) ) { break; }
+			// Limit caps the default targeted run; --all and --game are uncapped.
+			if ( ! $all && empty( $assoc['game'] ) && $processed >= $limit ) { break; }
 			$name = get_the_title( $game_id );
 
 			if ( ! $all && empty( $assoc['game'] ) && ! self::is_raw( $game_id ) ) {
