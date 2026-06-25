@@ -33,6 +33,7 @@ final class LGD_Plugin {
 			'includes/class-lgd-admin.php', 'includes/class-lgd-frontend.php',
 				'includes/class-lgd-guide-post-types.php',
 				'includes/class-lgd-guide-admin.php',
+				'includes/class-lgd-guide-generator.php',
 		);
 	}
 
@@ -56,6 +57,7 @@ final class LGD_Plugin {
 		new LGD_Frontend();
 		new LGD_Guide_Post_Types();
 		new LGD_Guide_Admin();
+		new LGD_Guide_Generator();
 		add_action( 'admin_init', array( 'LGD_Database', 'maybe_upgrade' ) );
 		add_action( 'init', array( 'LGD_AI_Adapter', 'ensure_provider_credentials' ), 6 );
 	}

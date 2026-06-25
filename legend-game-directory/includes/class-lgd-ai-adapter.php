@@ -49,6 +49,58 @@ final class LGD_AI_Adapter {
 		return is_wp_error( $valid ) ? $valid : $decoded;
 	}
 
+	/**
+	 * Generate an original, evergreen game guide from a game-context bundle.
+	 * Returns a structured array (title, difficulty, reading_time, key_points, body_html, seo fields)
+	 * or WP_Error. Content is original advice — the model is instructed not to fabricate specifics.
+	 */
+	public static function generate_guide( $context, $guide_type ) {
+		$ready = self::preflight( 'text' );
+		if ( is_wp_error( $ready ) ) { return $ready; }
+
+		$context      = is_array( $context ) ? $context : array();
+		$context_json = wp_json_encode( $context, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE );
+		$guide_type   = sanitize_text_field( $guide_type );
+
+		$system = 'You are an expert game-guide writer for an independent game directory. '
+			. 'Write ORIGINAL, evergreen, genuinely useful guidance in clear neutral second-person voice. '
+			. 'Never copy or paraphrase text from any specific source. '
+			. 'Do NOT invent unverifiable specifics: exact prices, exact stats or damage numbers, specific item names, '
+			. 'level or boss names, patch numbers, dates, or quotes. When unsure of a specific, keep advice general and '
+			. 'transferable for the game\'s genre and known design. Prefer durable strategy, onboarding steps, common '
+			. 'beginner mistakes, and decision-making frameworks over fragile facts. '
+			. 'Return ONLY valid JSON with exactly these fields: '
+			. 'title (string, compelling and specific), '
+			. 'difficulty (one of "Beginner","Intermediate","Advanced"), '
+			. 'reading_time (integer minutes), '
+			. 'key_points (array of 3-5 short strings), '
+			. 'body_html (string of clean semantic HTML using ONLY these tags: h2, h3, p, ul, ol, li, strong, em; '
+			. 'open with a short intro paragraph, then several h2 sections, no h1, no inline styles, no links, no images), '
+			. 'seo_title (string <= 60 chars), '
+			. 'meta_description (string <= 160 chars).';
+
+		$user = 'Write a "' . $guide_type . '" guide for the following game. '
+			. 'Use the context only as background — do not restate it verbatim or fabricate details beyond it:' . "\n"
+			. $context_json;
+
+		$result = self::chat_request(
+			array(
+				array( 'role' => 'system', 'content' => $system ),
+				array( 'role' => 'user', 'content' => $user ),
+			),
+			3200,
+			true
+		);
+		if ( is_wp_error( $result ) ) { return $result; }
+
+		self::record_usage( $result['usage']['input'], $result['usage']['output'], 'guide' );
+		$data = json_decode( $result['text'], true );
+		if ( ! is_array( $data ) || empty( $data['title'] ) || empty( $data['body_html'] ) ) {
+			return new WP_Error( 'lgd_ai_guide_malformed', __( 'AI guide output was malformed.', 'legend-game-directory' ) );
+		}
+		return $data;
+	}
+
 	public static function research_candidates( $query ) {
 		$settings = LGD_Security::settings();
 		if ( empty( $settings['enable_ai_web_search'] ) ) {
