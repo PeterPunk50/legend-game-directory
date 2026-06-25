@@ -18,7 +18,67 @@ final class LGD_Guide_Generator {
 
 		if ( defined( 'WP_CLI' ) && WP_CLI ) {
 			WP_CLI::add_command( 'lgd guide-generate', array( __CLASS__, 'cli_generate' ) );
+			WP_CLI::add_command( 'lgd guide-images', array( __CLASS__, 'cli_images' ) );
 		}
+	}
+
+	// ── Featured image sourcing ──────────────────────────────────────────────────
+
+	/**
+	 * Give a guide a featured image. Priority:
+	 *   1. Reuse the linked game's featured image (free, instant).
+	 *   2. Sideload the linked game's first official screenshot as a new attachment.
+	 *   3. AI-generated editorial thumbnail (only when $use_ai is true).
+	 * Returns a status string ('thumb'|'reused-game'|'sideloaded'|'ai'|'none') or WP_Error.
+	 */
+	public static function set_guide_image( $guide_id, $use_ai = false ) {
+		$guide_id = absint( $guide_id );
+		if ( 'game_guide' !== get_post_type( $guide_id ) ) {
+			return new WP_Error( 'lgd_guide_bad_image_target', __( 'Target is not a guide.', 'legend-game-directory' ) );
+		}
+		if ( get_post_thumbnail_id( $guide_id ) ) { return 'thumb'; }
+
+		$game_id = (int) get_post_meta( $guide_id, '_lgd_guide_game_id', true );
+
+		if ( $game_id ) {
+			// 1. Reuse the game's featured image attachment directly.
+			$game_thumb = get_post_thumbnail_id( $game_id );
+			if ( $game_thumb ) {
+				set_post_thumbnail( $guide_id, $game_thumb );
+				return 'reused-game';
+			}
+			// 2. Sideload the game's first stored screenshot for the guide.
+			$screens = get_post_meta( $game_id, '_lgd_official_screenshots', true );
+			if ( is_array( $screens ) && ! empty( $screens[0] ) ) {
+				require_once ABSPATH . 'wp-admin/includes/media.php';
+				require_once ABSPATH . 'wp-admin/includes/file.php';
+				require_once ABSPATH . 'wp-admin/includes/image.php';
+				$att = media_sideload_image( $screens[0], $guide_id, get_the_title( $guide_id ), 'id' );
+				if ( ! is_wp_error( $att ) ) {
+					set_post_thumbnail( $guide_id, $att );
+					return 'sideloaded';
+				}
+			}
+		}
+
+		// 3. AI fallback (opt-in; respects image budget + settings).
+		if ( $use_ai && LGD_AI_Adapter::available() ) {
+			$genre = '';
+			if ( $game_id ) {
+				$g = wp_get_post_terms( $game_id, 'game_genre', array( 'fields' => 'names' ) );
+				if ( ! is_wp_error( $g ) && ! empty( $g[0] ) ) { $genre = $g[0]; }
+			}
+			$prompt = 'Editorial thumbnail illustration for a video-game guide titled "' . get_the_title( $guide_id ) . '"'
+				. ( $genre ? ', ' . $genre . ' genre' : '' ) . '. Vibrant, abstract, atmospheric, no text or logos.';
+			$att = LGD_AI_Adapter::generate_artwork( $guide_id, $prompt, '16:9' );
+			if ( ! is_wp_error( $att ) ) {
+				set_post_thumbnail( $guide_id, $att );
+				return 'ai';
+			}
+			return $att; // WP_Error — surface the reason.
+		}
+
+		return 'none';
 	}
 
 	public function maybe_error_notice() {
@@ -127,8 +187,12 @@ final class LGD_Guide_Generator {
 		);
 		foreach ( $meta as $key => $value ) { update_post_meta( $post_id, $key, $value ); }
 
+		// Give the new guide a featured image by reusing the game's artwork (free, instant).
+		$image_status = self::set_guide_image( $post_id, false );
+
 		LGD_Logger::log( 'guide_generated', 'AI guide draft created.', array(
 			'guide_id' => $post_id, 'game_id' => $game_id, 'type' => $guide_type, 'status' => $status,
+			'image'    => is_wp_error( $image_status ) ? 'error' : $image_status,
 		), 'info', 'game', $game_id );
 
 		return $post_id;
@@ -287,5 +351,71 @@ final class LGD_Guide_Generator {
 		}
 
 		WP_CLI::success( "Guides — Done:{$done} Skipped:{$skipped} Failed:{$failed}" );
+	}
+
+	/**
+	 * Backfill featured images for guides that don't have one.
+	 *
+	 * ## OPTIONS
+	 *
+	 * [--limit=<n>]
+	 * : Max guides to process. Default 50.
+	 *
+	 * [--game=<id>]
+	 * : Only process guides linked to this game ID.
+	 *
+	 * [--ai]
+	 * : Allow AI image generation when no game artwork is available (uses image budget).
+	 *
+	 * ## EXAMPLES
+	 *
+	 *     wp lgd guide-images --limit=20
+	 *     wp lgd guide-images --ai
+	 */
+	public static function cli_images( $args, $assoc ) {
+		$limit  = isset( $assoc['limit'] ) ? max( 1, (int) $assoc['limit'] ) : 50;
+		$use_ai = isset( $assoc['ai'] );
+
+		$query = array(
+			'post_type'      => 'game_guide',
+			'post_status'    => array( 'publish', 'draft', 'pending', 'future' ),
+			'posts_per_page' => $limit,
+			'fields'         => 'ids',
+			'meta_query'     => array( array( 'key' => '_thumbnail_id', 'compare' => 'NOT EXISTS' ) ),
+		);
+		if ( ! empty( $assoc['game'] ) ) {
+			$query['meta_query'] = array(
+				'relation' => 'AND',
+				array( 'key' => '_thumbnail_id', 'compare' => 'NOT EXISTS' ),
+				array( 'key' => '_lgd_guide_game_id', 'value' => absint( $assoc['game'] ), 'type' => 'NUMERIC' ),
+			);
+		}
+		$ids = get_posts( $query );
+
+		if ( empty( $ids ) ) {
+			WP_CLI::success( 'No guides need images.' );
+			return;
+		}
+
+		$counts = array();
+		foreach ( $ids as $guide_id ) {
+			$name   = get_the_title( $guide_id );
+			$status = self::set_guide_image( $guide_id, $use_ai );
+			if ( is_wp_error( $status ) ) {
+				WP_CLI::warning( "FAIL  [{$guide_id}] {$name} — " . $status->get_error_message() );
+				if ( 'lgd_ai_budget' === $status->get_error_code() ) {
+					WP_CLI::warning( 'Image budget reached — stopping.' );
+					break;
+				}
+				continue;
+			}
+			$counts[ $status ] = ( isset( $counts[ $status ] ) ? $counts[ $status ] : 0 ) + 1;
+			WP_CLI::log( "{$status}  [{$guide_id}] {$name}" );
+			if ( 'ai' === $status ) { usleep( 400000 ); }
+		}
+
+		$summary = array();
+		foreach ( $counts as $k => $v ) { $summary[] = "{$k}:{$v}"; }
+		WP_CLI::success( 'Guide images — ' . ( $summary ? implode( ' ', $summary ) : 'none processed' ) );
 	}
 }
