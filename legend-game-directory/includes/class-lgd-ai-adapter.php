@@ -101,6 +101,54 @@ final class LGD_AI_Adapter {
 		return $data;
 	}
 
+	/**
+	 * Rewrite a long/raw store description into a concise, original editorial overview.
+	 * Returns array( short_description, overview_html ) or WP_Error. Original wording only —
+	 * all store boilerplate, URLs, legal notices, and cross-promotion are stripped.
+	 */
+	public static function rewrite_overview( $context ) {
+		$ready = self::preflight( 'text' );
+		if ( is_wp_error( $ready ) ) { return $ready; }
+
+		$context      = is_array( $context ) ? $context : array();
+		$context_json = wp_json_encode( $context, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE );
+		if ( strlen( $context_json ) > 60000 ) {
+			$context_json = substr( $context_json, 0, 60000 );
+		}
+
+		$system = 'You rewrite long app-store game descriptions into concise, ORIGINAL editorial overviews '
+			. 'for an independent game directory. Summarize entirely in your own words — never copy or closely '
+			. 'paraphrase the source phrasing. '
+			. 'Remove ALL store boilerplate: privacy policy, terms of service, support contacts, permission/camera '
+			. 'notices, age-rating disclaimers, "download now" marketing, review-count brags, every URL, and any '
+			. 'cross-promotion of other games. Keep only what a player needs: what the game is, its core gameplay, '
+			. 'modes, and a few notable features. Stay factual and neutral; do not invent specifics. '
+			. 'Return ONLY valid JSON with exactly these fields: '
+			. 'short_description (string, 1-2 sentences, max 240 chars, plain text, no HTML), '
+			. 'overview_html (string of clean HTML using ONLY these tags: p, ul, li, strong, em — '
+			. 'exactly one short intro <p>, then one <ul> of 3-6 concise feature bullets, then optionally one '
+			. 'closing <p>; no headings, no links, no images, no inline styles, no store text).';
+
+		$user = 'Rewrite this game description into a concise original overview.' . "\n" . $context_json;
+
+		$result = self::chat_request(
+			array(
+				array( 'role' => 'system', 'content' => $system ),
+				array( 'role' => 'user', 'content' => $user ),
+			),
+			1200,
+			true
+		);
+		if ( is_wp_error( $result ) ) { return $result; }
+
+		self::record_usage( $result['usage']['input'], $result['usage']['output'], 'overview' );
+		$data = json_decode( $result['text'], true );
+		if ( ! is_array( $data ) || empty( $data['overview_html'] ) || empty( $data['short_description'] ) ) {
+			return new WP_Error( 'lgd_ai_overview_malformed', __( 'AI overview output was malformed.', 'legend-game-directory' ) );
+		}
+		return $data;
+	}
+
 	public static function research_candidates( $query ) {
 		$settings = LGD_Security::settings();
 		if ( empty( $settings['enable_ai_web_search'] ) ) {

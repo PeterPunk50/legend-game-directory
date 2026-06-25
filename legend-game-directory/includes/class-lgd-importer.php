@@ -152,6 +152,8 @@ final class LGD_Importer {
 
 	private static function save_ai_summary( $game_id, $summary ) {
 		wp_update_post( array( 'ID' => $game_id, 'post_excerpt' => sanitize_textarea_field( $summary['short_description'] ), 'post_content' => wp_kses_post( wpautop( $summary['full_summary'] ) ) ) );
+		// Keep the hero lead in sync with the AI short description (not the raw store copy).
+		update_post_meta( $game_id, '_lgd_short_description', sanitize_textarea_field( $summary['short_description'] ) );
 		foreach ( array( 'best_for', 'pros', 'cons', 'monetization_notes', 'safety_notes', 'seo_title', 'meta_description', 'image_prompt' ) as $key ) { update_post_meta( $game_id, '_lgd_' . $key, $summary[ $key ] ); }
 		update_post_meta( $game_id, '_lgd_ai_generated_at', current_time( 'mysql', true ) );
 	}

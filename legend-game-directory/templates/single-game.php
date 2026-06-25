@@ -64,7 +64,7 @@ $grade  = get_post_meta( $id, '_lgd_monetization_grade', true ) ?: 'Pending';
 		<section class="lgd-section lgd-two-col">
 			<article class="lgd-panel">
 				<h2><?php esc_html_e( 'Overview', 'legend-game-directory' ); ?></h2>
-				<?php the_content(); ?>
+				<div class="lgd-overview-body"><?php the_content(); ?></div>
 				<?php $best = get_post_meta( $id, '_lgd_best_for', true ); if ( $best ) : ?><h3><?php esc_html_e( 'Best for', 'legend-game-directory' ); ?></h3><p><?php echo esc_html( $best ); ?></p><?php endif; ?>
 			</article>
 			<aside class="lgd-facts">

@@ -87,6 +87,13 @@
 .lgd-game-guides-card__title{color:var(--lgd-text);font-size:.95rem;font-weight:700;margin:0 0 4px}
 .lgd-game-guides-card__meta{color:var(--lgd-muted);font-size:.8rem}
 
+/* ── Game overview body (rewritten store copy) ── */
+.lgd-overview-body{line-height:1.7}
+.lgd-overview-body p{margin:0 0 1em;color:var(--lgd-text)}
+.lgd-overview-body ul{margin:0 0 1em;padding-left:20px}
+.lgd-overview-body li{margin-bottom:.5em;color:var(--lgd-text)}
+.lgd-overview-body strong{color:#fff}
+
 /* ── Responsive ── */
 @media(max-width:900px){.lgd-guide-grid{grid-template-columns:repeat(2,1fr)}.lgd-guide-layout{grid-template-columns:1fr}.lgd-guide-sidebar{display:contents}.lgd-guide-sidebar__panel{margin-top:24px}.lgd-game-guides-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:560px){.lgd-guide-grid,.lgd-game-guides-grid{grid-template-columns:1fr}.lgd-filter-tabs{gap:6px}.lgd-filter-tab{font-size:.8rem;padding:7px 12px}}
