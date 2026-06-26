@@ -48,6 +48,9 @@ final class LCC_Registration {
 
 		$err = isset( $_GET['lcc_reg_error'] ) ? sanitize_key( wp_unslash( $_GET['lcc_reg_error'] ) ) : '';
 		$old_email = isset( $_GET['lcc_email'] ) ? sanitize_email( wp_unslash( $_GET['lcc_email'] ) ) : '';
+		$ref = '';
+		if ( ! empty( $_GET['ref'] ) ) { $ref = strtoupper( sanitize_text_field( wp_unslash( $_GET['ref'] ) ) ); }
+		elseif ( ! empty( $_COOKIE['lcc_ref'] ) ) { $ref = strtoupper( sanitize_text_field( wp_unslash( $_COOKIE['lcc_ref'] ) ) ); }
 		$rules_page = get_page_by_path( 'community-rules', OBJECT, 'page' );
 
 		ob_start(); ?>
@@ -62,6 +65,7 @@ final class LCC_Registration {
 					<?php wp_nonce_field( 'lcc_register', 'lcc_register_nonce' ); ?>
 					<input type="hidden" name="action" value="lcc_register">
 					<div class="lcc-hp" aria-hidden="true"><label>Leave this empty<input type="text" name="lcc_hp" tabindex="-1" autocomplete="off"></label></div>
+					<?php if ( $ref ) : ?><input type="hidden" name="lcc_ref" value="<?php echo esc_attr( $ref ); ?>"><?php endif; ?>
 
 					<label><?php esc_html_e( 'Display name', 'legendcreate-community' ); ?>
 						<input type="text" name="lcc_display" required maxlength="50"></label>
@@ -153,7 +157,8 @@ final class LCC_Registration {
 		update_user_meta( $user_id, 'lcc_verified', 0 );
 		$this->send_verification( $user_id, $token );
 
-		do_action( 'lcc_member_registered', $user_id );
+		$ref = isset( $_POST['lcc_ref'] ) ? strtoupper( sanitize_text_field( wp_unslash( $_POST['lcc_ref'] ) ) ) : '';
+		do_action( 'lcc_member_registered', $user_id, $ref );
 
 		// Auto-login and route into onboarding.
 		wp_set_current_user( $user_id );

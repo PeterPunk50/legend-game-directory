@@ -6,7 +6,7 @@ if ( ! defined( 'ABSPATH' ) ) { exit; }
  */
 final class LCC_Activator {
 
-	const DB_VERSION = 3;
+	const DB_VERSION = 4;
 
 	public static function install() {
 		LCC_Roles::install_roles();
@@ -49,6 +49,20 @@ final class LCC_Activator {
 			PRIMARY KEY  (id),
 			KEY user (user_id),
 			KEY user_action_ref (user_id, action, ref_id)
+		) {$charset};" );
+
+		$referrals = $wpdb->prefix . 'lcc_referrals';
+		dbDelta( "CREATE TABLE {$referrals} (
+			id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+			referrer_id BIGINT UNSIGNED NOT NULL,
+			referred_id BIGINT UNSIGNED NOT NULL,
+			code VARCHAR(20) NOT NULL DEFAULT '',
+			status VARCHAR(20) NOT NULL DEFAULT 'pending',
+			created_at DATETIME NOT NULL,
+			activated_at DATETIME NULL,
+			PRIMARY KEY  (id),
+			UNIQUE KEY referred (referred_id),
+			KEY referrer (referrer_id)
 		) {$charset};" );
 	}
 

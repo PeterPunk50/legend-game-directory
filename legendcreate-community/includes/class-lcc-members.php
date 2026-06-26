@@ -107,6 +107,11 @@ final class LCC_Members {
 		echo '</div>';
 		echo '</div>';
 
+		// Referrals.
+		if ( class_exists( 'LCC_Referrals' ) ) {
+			echo '<div class="lcc-panel">' . LCC_Referrals::render( $uid ) . '</div>';
+		}
+
 		// Edit profile form.
 		echo '<div class="lcc-panel"><h3>' . esc_html__( 'Edit Profile', 'legendcreate-community' ) . '</h3>';
 		echo $this->profile_form( $uid, $p );
