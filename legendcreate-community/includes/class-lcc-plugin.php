@@ -17,6 +17,7 @@ final class LCC_Plugin {
 		return array(
 			'includes/class-lcc-activator.php',
 			'includes/class-lcc-roles.php',
+			'includes/class-lcc-memberships.php',
 		);
 	}
 
@@ -30,20 +31,21 @@ final class LCC_Plugin {
 		self::load_files();
 
 		new LCC_Roles();
+		new LCC_Memberships();
 
 		add_action( 'admin_notices', array( $this, 'dependency_notice' ) );
 	}
 
 	/**
-	 * Warn admins if Paid Memberships Pro (billing/levels) is not active.
-	 * The plugin still loads — membership checks degrade gracefully — but billing
-	 * and access tiers require PMP.
+	 * Warn admins if WooCommerce (checkout/orders for Fygaro payments) is not active.
+	 * The plugin still loads — membership state degrades gracefully — but selling
+	 * Premium requires WooCommerce plus the Fygaro gateway.
 	 */
 	public function dependency_notice() {
 		if ( ! current_user_can( 'activate_plugins' ) ) { return; }
-		if ( LCC_Roles::pmpro_active() ) { return; }
+		if ( LCC_Roles::woocommerce_active() ) { return; }
 		echo '<div class="notice notice-warning"><p><strong>LegendCreate Community:</strong> '
-			. esc_html__( 'Paid Memberships Pro is not active. Install and activate it to enable membership levels, checkout, and premium access.', 'legendcreate-community' )
+			. esc_html__( 'WooCommerce is not active. Install WooCommerce and the Fygaro payment gateway to sell Premium memberships.', 'legendcreate-community' )
 			. '</p></div>';
 	}
 
@@ -53,6 +55,8 @@ final class LCC_Plugin {
 	}
 
 	public static function deactivate() {
+		self::load_files();
+		LCC_Memberships::unschedule();
 		// Roles and data are intentionally preserved on deactivation.
 		// Full teardown happens only on uninstall (uninstall.php), if added later.
 	}

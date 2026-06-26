@@ -10,6 +10,7 @@ final class LCC_Activator {
 
 	public static function install() {
 		LCC_Roles::install_roles();
+		LCC_Memberships::schedule();
 		update_option( 'lcc_db_version', self::DB_VERSION );
 		update_option( 'lcc_installed_at', get_option( 'lcc_installed_at', current_time( 'mysql', true ) ) );
 	}

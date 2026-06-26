@@ -4,10 +4,10 @@ if ( ! defined( 'ABSPATH' ) ) { exit; }
 /**
  * Roles and capability layer.
  *
- * Membership *levels* (Visitor / Legend Member / Legend Premium) are owned by
- * Paid Memberships Pro. This class adds the earned "Legend Tester" WordPress role
- * and the capability map, plus server-side helpers to check membership level.
- * Never trust a membership level from client-side input — always check here.
+ * Membership state (free vs. timed Premium) is owned by LCC_Memberships, backed by
+ * WooCommerce orders paid through Fygaro. This class adds the earned "Legend Tester"
+ * WordPress role and the capability map, and exposes thin membership helpers that
+ * delegate to LCC_Memberships. Never trust a membership level from client input.
  */
 final class LCC_Roles {
 
@@ -48,46 +48,22 @@ final class LCC_Roles {
 		}
 	}
 
-	// ── Paid Memberships Pro integration ─────────────────────────────────────────
+	// ── WooCommerce dependency ───────────────────────────────────────────────────
 
-	public static function pmpro_active() {
-		return function_exists( 'pmpro_hasMembershipLevel' );
+	public static function woocommerce_active() {
+		return class_exists( 'WooCommerce' );
 	}
 
-	/**
-	 * Configured PMP level IDs. Defaults: free = 1, premium = 2. Stored as options so
-	 * the IDs can be corrected after the levels are created in the PMP admin.
-	 */
-	public static function level_free() {
-		return (int) get_option( 'lcc_level_free', 1 );
-	}
+	// ── Server-side membership checks (delegate to LCC_Memberships) ───────────────
 
-	public static function level_premium() {
-		return (int) get_option( 'lcc_level_premium', 2 );
-	}
-
-	// ── Server-side membership checks ────────────────────────────────────────────
-
-	/**
-	 * Is the user a member at all (free or premium)? Falls back to "logged in" when
-	 * PMP is not active, so the community features still work during setup.
-	 */
+	/** Any registered, logged-in user is a free member. */
 	public static function is_member( $user_id = null ) {
-		$user_id = $user_id ? (int) $user_id : get_current_user_id();
-		if ( ! $user_id ) { return false; }
-		if ( ! self::pmpro_active() ) { return true; }
-		return (bool) pmpro_hasMembershipLevel( array( self::level_free(), self::level_premium() ), $user_id );
+		return LCC_Memberships::is_member( $user_id );
 	}
 
-	/**
-	 * Is the user a paying premium member? Always false when not logged in.
-	 * When PMP is inactive this returns false (premium requires billing).
-	 */
+	/** Paying premium member with an unexpired timed membership. */
 	public static function is_premium( $user_id = null ) {
-		$user_id = $user_id ? (int) $user_id : get_current_user_id();
-		if ( ! $user_id ) { return false; }
-		if ( ! self::pmpro_active() ) { return false; }
-		return (bool) pmpro_hasMembershipLevel( self::level_premium(), $user_id );
+		return LCC_Memberships::is_premium( $user_id );
 	}
 
 	public static function is_tester( $user_id = null ) {
