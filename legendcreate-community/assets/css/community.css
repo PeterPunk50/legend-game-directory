@@ -36,4 +36,28 @@
 .lcc-onboarding .lcc-step{background:var(--lcc-panel);border:1px solid var(--lcc-border);border-radius:14px;padding:20px;position:relative}
 .lcc-step-n{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--lcc-cyan),var(--lcc-purple));color:#07111f;font-weight:900;margin-right:8px}
 .lcc-onboarding .lcc-step h3{display:inline}
-@media(max-width:700px){.lcc-grid{grid-template-columns:1fr}}
+/* Squads */
+.lcc-btn-ghost{background:transparent;border:1px solid var(--lcc-border);color:var(--lcc-text)}
+.lcc-squad-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin:18px 0}
+.lcc-squad-card{display:flex;gap:14px;background:var(--lcc-panel);border:1px solid var(--lcc-border);border-radius:14px;padding:16px}
+.lcc-squad-card__logo{flex-shrink:0;width:56px;height:56px;border-radius:12px;overflow:hidden;display:block}
+.lcc-squad-card__logo img{width:100%;height:100%;object-fit:cover}
+.lcc-squad-initial{display:flex;align-items:center;justify-content:center;width:56px;height:56px;background:linear-gradient(135deg,var(--lcc-cyan),var(--lcc-purple));color:#07111f;font-weight:900;font-size:1.5rem}
+.lcc-squad-initial-lg{width:96px;height:96px;font-size:2.6rem;border-radius:16px}
+.lcc-squad-card__body h3{margin:0 0 4px;font-size:1.05rem}
+.lcc-squad-card__body h3 a{color:var(--lcc-text);text-decoration:none}
+.lcc-squad-card__meta{color:var(--lcc-cyan);font-size:.82rem;margin:4px 0 0}
+.lcc-squad-hero{display:flex;gap:24px;align-items:center;flex-wrap:wrap}
+.lcc-squad-hero__logo{flex-shrink:0;border-radius:16px;overflow:hidden}
+.lcc-squad-hero__logo img{display:block;width:96px;height:96px;object-fit:cover;border-radius:16px}
+.lcc-squad-hero h1{margin:0 0 6px;color:var(--lcc-text)}
+.lcc-squad-games{color:var(--lcc-cyan);margin:0 0 6px}
+.lcc-squad-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px}
+.lcc-squad-actions form{margin:0}
+.lcc-invite{width:100%;background:#07111f;color:var(--lcc-cyan);border:1px solid var(--lcc-border);border-radius:9px;padding:10px;box-sizing:border-box}
+.lcc-member-list,.lcc-squad-list{list-style:none;padding:0;margin:0}
+.lcc-member-list li{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--lcc-border)}
+.lcc-member-list img{border-radius:50%}
+.lcc-squad-list li{padding:8px 0;border-bottom:1px solid var(--lcc-border)}
+.lcc-squad-list a{color:var(--lcc-text);text-decoration:none}
+@media(max-width:700px){.lcc-grid{grid-template-columns:1fr}.lcc-squad-grid{grid-template-columns:1fr}}

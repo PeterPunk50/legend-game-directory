@@ -97,8 +97,11 @@ final class LCC_Members {
 		echo $p['platforms'] ? '<p>' . esc_html( implode( ', ', $p['platforms'] ) ) . '</p>' : '<p class="lcc-muted">—</p>';
 		echo '</div>';
 
-		echo '<div class="lcc-panel"><h3>' . esc_html__( 'Squad', 'legendcreate-community' ) . '</h3><p class="lcc-muted">' . esc_html__( 'Squads arrive soon — invite your existing crew when they launch.', 'legendcreate-community' ) . '</p>';
-		echo '<h3>' . esc_html__( 'Points & Badges', 'legendcreate-community' ) . '</h3><p class="lcc-muted">' . esc_html__( 'Earn points by rating games, testing, and helping the community.', 'legendcreate-community' ) . '</p></div>';
+		echo '<div class="lcc-panel">';
+		if ( class_exists( 'LCC_Squads' ) ) {
+			echo LCC_Squads::render_my_squads( $uid );
+		}
+		echo '<h3 style="margin-top:18px">' . esc_html__( 'Points & Badges', 'legendcreate-community' ) . '</h3><p class="lcc-muted">' . esc_html__( 'Earn points by rating games, testing, and helping the community.', 'legendcreate-community' ) . '</p></div>';
 		echo '</div>';
 
 		// Edit profile form.

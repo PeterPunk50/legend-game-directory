@@ -21,6 +21,7 @@ final class LCC_Plugin {
 			'includes/class-lcc-profiles.php',
 			'includes/class-lcc-members.php',
 			'includes/class-lcc-registration.php',
+			'includes/class-lcc-squads.php',
 		);
 	}
 
@@ -38,6 +39,7 @@ final class LCC_Plugin {
 		new LCC_Profiles();
 		new LCC_Members();
 		new LCC_Registration();
+		new LCC_Squads();
 
 		add_action( 'admin_notices', array( $this, 'dependency_notice' ) );
 	}
@@ -58,11 +60,14 @@ final class LCC_Plugin {
 	public static function activate() {
 		self::load_files();
 		LCC_Activator::install();
+		LCC_Squads::register_cpt();
+		flush_rewrite_rules();
 	}
 
 	public static function deactivate() {
 		self::load_files();
 		LCC_Memberships::unschedule();
+		flush_rewrite_rules();
 		// Roles and data are intentionally preserved on deactivation.
 		// Full teardown happens only on uninstall (uninstall.php), if added later.
 	}

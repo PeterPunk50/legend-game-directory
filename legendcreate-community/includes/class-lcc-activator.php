@@ -6,14 +6,36 @@ if ( ! defined( 'ABSPATH' ) ) { exit; }
  */
 final class LCC_Activator {
 
-	const DB_VERSION = 1;
+	const DB_VERSION = 2;
 
 	public static function install() {
 		LCC_Roles::install_roles();
 		LCC_Memberships::schedule();
+		self::create_tables();
 		self::ensure_pages();
 		update_option( 'lcc_db_version', self::DB_VERSION );
 		update_option( 'lcc_installed_at', get_option( 'lcc_installed_at', current_time( 'mysql', true ) ) );
+	}
+
+	public static function create_tables() {
+		global $wpdb;
+		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+		$charset = $wpdb->get_charset_collate();
+		$members = $wpdb->prefix . 'lcc_squad_members';
+
+		dbDelta( "CREATE TABLE {$members} (
+			id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+			squad_id BIGINT UNSIGNED NOT NULL,
+			user_id BIGINT UNSIGNED NOT NULL,
+			role VARCHAR(20) NOT NULL DEFAULT 'member',
+			status VARCHAR(20) NOT NULL DEFAULT 'active',
+			points INT NOT NULL DEFAULT 0,
+			joined_at DATETIME NOT NULL,
+			PRIMARY KEY  (id),
+			UNIQUE KEY squad_user (squad_id, user_id),
+			KEY squad (squad_id),
+			KEY user (user_id)
+		) {$charset};" );
 	}
 
 	/**
@@ -22,9 +44,10 @@ final class LCC_Activator {
 	 */
 	private static function ensure_pages() {
 		$pages = array(
-			'lcc_page_register'   => array( 'title' => 'Join LegendCreate', 'slug' => 'join', 'shortcode' => '[lcc_register]' ),
-			'lcc_page_dashboard'  => array( 'title' => 'Member Dashboard', 'slug' => 'dashboard', 'shortcode' => '[lcc_dashboard]' ),
-			'lcc_page_onboarding' => array( 'title' => 'Get Started', 'slug' => 'get-started', 'shortcode' => '[lcc_onboarding]' ),
+			'lcc_page_register'     => array( 'title' => 'Join LegendCreate', 'slug' => 'join', 'shortcode' => '[lcc_register]' ),
+			'lcc_page_dashboard'    => array( 'title' => 'Member Dashboard', 'slug' => 'dashboard', 'shortcode' => '[lcc_dashboard]' ),
+			'lcc_page_onboarding'   => array( 'title' => 'Get Started', 'slug' => 'get-started', 'shortcode' => '[lcc_onboarding]' ),
+			'lcc_page_squad_create' => array( 'title' => 'Create a Squad', 'slug' => 'create-squad', 'shortcode' => '[lcc_squad_create]' ),
 		);
 		foreach ( $pages as $option => $page ) {
 			$existing = (int) get_option( $option, 0 );
