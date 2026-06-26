@@ -24,6 +24,7 @@ final class LCC_Plugin {
 			'includes/class-lcc-squads.php',
 			'includes/class-lcc-reputation.php',
 			'includes/class-lcc-referrals.php',
+			'includes/class-lcc-landing.php',
 		);
 	}
 
@@ -44,6 +45,7 @@ final class LCC_Plugin {
 		new LCC_Squads();
 		new LCC_Reputation();
 		new LCC_Referrals();
+		new LCC_Landing();
 
 		add_action( 'admin_notices', array( $this, 'dependency_notice' ) );
 	}

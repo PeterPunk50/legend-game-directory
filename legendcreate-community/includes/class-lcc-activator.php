@@ -76,6 +76,10 @@ final class LCC_Activator {
 			'lcc_page_dashboard'    => array( 'title' => 'Member Dashboard', 'slug' => 'dashboard', 'shortcode' => '[lcc_dashboard]' ),
 			'lcc_page_onboarding'   => array( 'title' => 'Get Started', 'slug' => 'get-started', 'shortcode' => '[lcc_onboarding]' ),
 			'lcc_page_squad_create' => array( 'title' => 'Create a Squad', 'slug' => 'create-squad', 'shortcode' => '[lcc_squad_create]' ),
+			'lcc_page_play_fortnite' => array( 'title' => 'Fortnite Squads & Guides', 'slug' => 'play-fortnite', 'shortcode' => '[lcc_game_landing game="Fortnite"]' ),
+			'lcc_page_play_cod'      => array( 'title' => 'Call of Duty Squads & Guides', 'slug' => 'play-call-of-duty', 'shortcode' => '[lcc_game_landing game="Call of Duty"]' ),
+			'lcc_page_play_cs'       => array( 'title' => 'Counter-Strike Squads & Guides', 'slug' => 'play-counter-strike', 'shortcode' => '[lcc_game_landing game="Counter-Strike"]' ),
+			'lcc_page_play_apex'     => array( 'title' => 'Apex Legends Squads & Guides', 'slug' => 'play-apex-legends', 'shortcode' => '[lcc_game_landing game="Apex Legends"]' ),
 		);
 		foreach ( $pages as $option => $page ) {
 			$existing = (int) get_option( $option, 0 );

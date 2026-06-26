@@ -68,4 +68,18 @@
 .lcc-ref-stats{display:flex;gap:24px;margin-top:12px}
 .lcc-ref-stats strong{font-size:1.4rem;color:var(--lcc-cyan);display:block}
 .lcc-ref-stats span{color:var(--lcc-muted);font-size:.82rem}
+/* Game landing pages */
+.lcc-landing-hero{padding:40px 0 24px;text-align:center}
+.lcc-landing-hero h1{font-size:clamp(1.9rem,4.5vw,3.2rem);color:var(--lcc-text);margin:0 0 .3em}
+.lcc-landing-lead{max-width:720px;margin:0 auto 18px;color:var(--lcc-muted);font-size:1.1rem}
+.lcc-landing-cta{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:16px}
+.lcc-disclaimer{max-width:760px;margin:8px auto 0;color:var(--lcc-muted);font-size:.76rem;opacity:.8}
+.lcc-landing-section{padding:24px 0}
+.lcc-landing-guides{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.lcc-guide-card{display:block;background:var(--lcc-panel);border:1px solid var(--lcc-border);border-radius:12px;padding:16px;text-decoration:none}
+.lcc-guide-card h4{margin:0 0 6px;color:var(--lcc-text)}
+.lcc-guide-card p{margin:0;color:var(--lcc-muted);font-size:.88rem}
+.lcc-guide-card:hover{border-color:rgba(49,215,255,.4)}
+.lcc-landing-list{columns:2;gap:24px;color:var(--lcc-text)}
+@media(max-width:700px){.lcc-landing-guides{grid-template-columns:1fr}.lcc-landing-list{columns:1}}
 @media(max-width:700px){.lcc-grid{grid-template-columns:1fr}.lcc-squad-grid{grid-template-columns:1fr}}
