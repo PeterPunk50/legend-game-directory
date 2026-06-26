@@ -24,10 +24,17 @@ final class LGD_Plugin {
 			'includes/providers/class-lgd-provider-external-score.php',
 			'includes/providers/class-lgd-provider-official-site.php',
 			'includes/class-lgd-rating-engine.php', 'includes/class-lgd-ai-adapter.php',
+			'includes/class-lgd-artwork-fetcher.php',
+			'includes/class-lgd-monetization.php',
+			'includes/class-lgd-taxonomy-map.php',
 			'includes/class-lgd-importer.php', 'includes/class-lgd-scheduler.php',
 			'includes/class-lgd-reviews.php', 'includes/class-lgd-comparison.php',
 			'includes/class-lgd-engagement.php', 'includes/class-lgd-seo.php',
 			'includes/class-lgd-admin.php', 'includes/class-lgd-frontend.php',
+				'includes/class-lgd-guide-post-types.php',
+				'includes/class-lgd-guide-admin.php',
+				'includes/class-lgd-guide-generator.php',
+				'includes/class-lgd-content-cleanup.php',
 		);
 	}
 
@@ -40,6 +47,7 @@ final class LGD_Plugin {
 		$this->booted = true;
 		self::load_files();
 		new LGD_Post_Types();
+		new LGD_Taxonomy_Map();
 		new LGD_Provider_Registry();
 		new LGD_Scheduler();
 		new LGD_Reviews();
@@ -48,7 +56,12 @@ final class LGD_Plugin {
 		new LGD_SEO();
 		new LGD_Admin();
 		new LGD_Frontend();
+		new LGD_Guide_Post_Types();
+		new LGD_Guide_Admin();
+		new LGD_Guide_Generator();
+		new LGD_Content_Cleanup();
 		add_action( 'admin_init', array( 'LGD_Database', 'maybe_upgrade' ) );
+		add_action( 'init', array( 'LGD_AI_Adapter', 'ensure_provider_credentials' ), 6 );
 	}
 
 	public static function activate() {
@@ -56,6 +69,9 @@ final class LGD_Plugin {
 		LGD_Database::install();
 		LGD_Post_Types::register_all();
 		LGD_Post_Types::seed_terms();
+		LGD_Guide_Post_Types::register_all();
+		LGD_Guide_Post_Types::seed_guide_types();
+		LGD_Guide_Post_Types::add_capabilities();
 		LGD_Admin::add_capabilities();
 		LGD_Scheduler::schedule_all();
 		flush_rewrite_rules();

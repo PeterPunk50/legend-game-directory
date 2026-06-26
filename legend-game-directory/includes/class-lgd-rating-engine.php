@@ -10,6 +10,71 @@ final class LGD_Rating_Engine {
 		);
 	}
 
+	/**
+	 * Map a normalized provider record onto the 0–100 rating criteria using only signals
+	 * that are actually present. Criteria with no supporting evidence are omitted, so the
+	 * rating engine treats them as missing (lowering coverage/confidence) rather than guessing.
+	 */
+	public static function derive_facts( $data ) {
+		$f = array();
+
+		// Player sentiment from a store review summary (e.g. Steam "Very Positive").
+		$sentiment = isset( $data['steam_sentiment'] ) ? strtolower( trim( (string) $data['steam_sentiment'] ) ) : '';
+		$sentiment_map = array(
+			'overwhelmingly positive' => 97, 'very positive' => 90, 'positive' => 82, 'mostly positive' => 72,
+			'mixed' => 50, 'mostly negative' => 32, 'negative' => 22, 'very negative' => 12, 'overwhelmingly negative' => 5,
+		);
+		if ( isset( $sentiment_map[ $sentiment ] ) ) { $f['player_sentiment'] = $sentiment_map[ $sentiment ]; }
+
+		// Review consensus only from an actual external critic score (Tier 2), never invented.
+		if ( isset( $data['external_critic_score'] ) && is_numeric( $data['external_critic_score'] ) ) {
+			$f['review_consensus'] = min( 100, max( 0, (float) $data['external_critic_score'] ) );
+		}
+
+		// Value & monetization from the disclosed pricing model.
+		$free_type = isset( $data['free_type'] ) ? $data['free_type'] : '';
+		$value_map = array( 'Open Source' => 95, 'Permanently Free' => 90, 'Temporarily Free' => 82, 'Free to Play' => 78, 'Free Demo' => 68, 'Freemium' => 60 );
+		if ( isset( $value_map[ $free_type ] ) ) {
+			$value = $value_map[ $free_type ];
+			if ( ! empty( $data['advertising'] ) && preg_match( '/aggressive|heavy|intrusive/i', (string) $data['advertising'] ) ) { $value -= 15; }
+			if ( ! empty( $data['in_app_purchases'] ) && preg_match( '/pay.?to.?win|aggressive|heavy/i', (string) $data['in_app_purchases'] ) ) { $value -= 15; }
+			$f['value_monetization'] = max( 0, $value );
+		}
+
+		// Update activity from the most recent known date.
+		$date = ! empty( $data['last_update_date'] ) ? $data['last_update_date'] : ( ! empty( $data['release_date'] ) ? $data['release_date'] : '' );
+		$ts = $date ? strtotime( (string) $date ) : false;
+		if ( $ts ) {
+			$months = ( time() - $ts ) / ( 30 * DAY_IN_SECONDS );
+			$f['update_activity'] = $months <= 3 ? 95 : ( $months <= 6 ? 85 : ( $months <= 12 ? 70 : ( $months <= 24 ? 50 : ( $months <= 48 ? 35 : 20 ) ) ) );
+		}
+
+		// Platform support from breadth of supported platforms.
+		$platforms = isset( $data['platforms'] ) && is_array( $data['platforms'] ) ? count( array_filter( $data['platforms'] ) ) : 0;
+		if ( $platforms > 0 ) { $f['platform_support'] = min( 100, 45 + $platforms * 15 ); }
+
+		// Accessibility from controller support and language breadth.
+		$accessibility = null;
+		if ( ! empty( $data['controller_support'] ) ) { $accessibility = ( 'full' === strtolower( (string) $data['controller_support'] ) ) ? 85 : 68; }
+		$langs = isset( $data['supported_languages'] ) && is_array( $data['supported_languages'] ) ? count( array_filter( $data['supported_languages'] ) ) : 0;
+		if ( $langs > 0 ) { $lang_score = min( 100, 45 + $langs * 5 ); $accessibility = null === $accessibility ? $lang_score : (int) round( ( $accessibility + $lang_score ) / 2 ); }
+		if ( null !== $accessibility ) { $f['accessibility'] = $accessibility; }
+
+		// Safety & transparency from a recognized legitimate storefront and absence of safety flags.
+		if ( ! empty( $data['source_url'] ) ) {
+			$host = strtolower( (string) wp_parse_url( $data['source_url'], PHP_URL_HOST ) );
+			$trusted = array( 'steampowered.com', 'apple.com', 'itunes.apple.com', 'play.google.com', 'itch.io' );
+			foreach ( $trusted as $t ) {
+				if ( $host === $t || substr( $host, -strlen( '.' . $t ) ) === '.' . $t ) { $f['safety_transparency'] = empty( $data['safety_notes'] ) ? 88 : 45; break; }
+			}
+		}
+
+		// Technical stability is inferred conservatively from player sentiment when available (stability complaints surface there).
+		if ( isset( $f['player_sentiment'] ) ) { $f['technical_stability'] = max( 0, $f['player_sentiment'] - 5 ); }
+
+		return $f;
+	}
+
 	public static function calculate( $facts, $source_confidence = 0 ) {
 		$settings = LGD_Security::settings();
 		$weights = isset( $settings['weights'] ) && is_array( $settings['weights'] ) ? $settings['weights'] : self::default_weights();

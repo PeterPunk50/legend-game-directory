@@ -24,25 +24,39 @@ final class LGD_Frontend {
 			wp_enqueue_script( 'lgd-public', LGD_URL . 'assets/js/public.js', array(), LGD_VERSION, true );
 			wp_localize_script( 'lgd-public', 'LGD', array( 'nonce' => wp_create_nonce( 'wp_rest' ), 'compareUrl' => add_query_arg( 'games', '', get_post_type_archive_link( 'game' ) ) . '#compare' ) );
 		}
+		if ( is_post_type_archive( 'game_guide' ) || is_singular( 'game_guide' ) || is_singular( 'game' ) ) {
+			wp_enqueue_style( 'lgd-public', LGD_URL . 'assets/css/public.css', array(), LGD_VERSION );
+			wp_enqueue_style( 'lgd-guides', LGD_URL . 'assets/css/guides.css', array( 'lgd-public' ), LGD_VERSION );
+		}
 		if ( is_admin() ) { wp_enqueue_style( 'lgd-admin', LGD_URL . 'assets/css/admin.css', array(), LGD_VERSION ); }
 	}
 
 	public function templates( $template ) {
 		if ( is_singular( 'game' ) && false === strpos( wp_normalize_path( $template ), 'single-game.php' ) ) { return LGD_PATH . 'templates/single-game.php'; }
 		if ( is_post_type_archive( 'game' ) && false === strpos( wp_normalize_path( $template ), 'archive-game.php' ) ) { return LGD_PATH . 'templates/archive-game.php'; }
+		if ( is_singular( 'game_guide' ) && false === strpos( wp_normalize_path( $template ), 'single-game_guide.php' ) ) { return LGD_PATH . 'templates/single-game_guide.php'; }
+		if ( is_post_type_archive( 'game_guide' ) && false === strpos( wp_normalize_path( $template ), 'archive-game_guide.php' ) ) { return LGD_PATH . 'templates/archive-game_guide.php'; }
 		return $template;
 	}
 
 	public function filters( $query ) {
-		if ( is_admin() || ! $query->is_main_query() || ! ( $query->is_post_type_archive( 'game' ) || $query->is_tax( array( 'game_type', 'game_platform', 'game_genre', 'game_pricing' ) ) ) ) { return; }
-		$query->set( 'posts_per_page', 24 );
-		$tax_query = array();
-		foreach ( array( 'type' => 'game_type', 'platform' => 'game_platform', 'genre' => 'game_genre', 'pricing' => 'game_pricing' ) as $param => $taxonomy ) {
-			if ( ! empty( $_GET[ $param ] ) ) { $tax_query[] = array( 'taxonomy' => $taxonomy, 'field' => 'slug', 'terms' => sanitize_title( wp_unslash( $_GET[ $param ] ) ) ); }
+		if ( is_admin() || ! $query->is_main_query() ) { return; }
+		if ( $query->is_post_type_archive( 'game' ) || $query->is_tax( array( 'game_type', 'game_platform', 'game_genre', 'game_pricing' ) ) ) {
+			$query->set( 'posts_per_page', 24 );
+			$tax_query = array();
+			foreach ( array( 'type' => 'game_type', 'platform' => 'game_platform', 'genre' => 'game_genre', 'pricing' => 'game_pricing' ) as $param => $taxonomy ) {
+				if ( ! empty( $_GET[ $param ] ) ) { $tax_query[] = array( 'taxonomy' => $taxonomy, 'field' => 'slug', 'terms' => sanitize_title( wp_unslash( $_GET[ $param ] ) ) ); }
+			}
+			if ( $tax_query ) { $query->set( 'tax_query', $tax_query ); }
+			if ( isset( $_GET['rating'] ) && is_numeric( $_GET['rating'] ) ) { $query->set( 'meta_query', array( array( 'key' => '_lgd_automated_score', 'value' => (float) $_GET['rating'], 'compare' => '>=', 'type' => 'NUMERIC' ) ) ); }
+			if ( ! empty( $_GET['keyword'] ) ) { $query->set( 's', sanitize_text_field( wp_unslash( $_GET['keyword'] ) ) ); }
 		}
-		if ( $tax_query ) { $query->set( 'tax_query', $tax_query ); }
-		if ( isset( $_GET['rating'] ) && is_numeric( $_GET['rating'] ) ) { $query->set( 'meta_query', array( array( 'key' => '_lgd_automated_score', 'value' => (float) $_GET['rating'], 'compare' => '>=', 'type' => 'NUMERIC' ) ) ); }
-		if ( ! empty( $_GET['keyword'] ) ) { $query->set( 's', sanitize_text_field( wp_unslash( $_GET['keyword'] ) ) ); }
+		if ( $query->is_post_type_archive( 'game_guide' ) ) {
+			$query->set( 'posts_per_page', 12 );
+			if ( ! empty( $_GET['guide_type'] ) ) {
+				$query->set( 'tax_query', array( array( 'taxonomy' => 'guide_type', 'field' => 'slug', 'terms' => sanitize_title( wp_unslash( $_GET['guide_type'] ) ) ) ) );
+			}
+		}
 	}
 
 	public function routes() {
@@ -63,7 +77,7 @@ final class LGD_Frontend {
 	public function search_shortcode() {
 		$taxes = array( 'type' => 'game_type', 'platform' => 'game_platform', 'genre' => 'game_genre', 'pricing' => 'game_pricing' ); ob_start(); ?>
 		<form class="lgd-search" action="<?php echo esc_url( get_post_type_archive_link( 'game' ) ); ?>" method="get"><label><span><?php esc_html_e( 'Keyword', 'legend-game-directory' ); ?></span><input name="keyword" value="<?php echo isset( $_GET['keyword'] ) ? esc_attr( wp_unslash( $_GET['keyword'] ) ) : ''; ?>"></label>
-		<?php foreach ( $taxes as $name => $taxonomy ) : ?><label><span><?php echo esc_html( ucfirst( $name ) ); ?></span><select name="<?php echo esc_attr( $name ); ?>"><option value=""><?php esc_html_e( 'Any', 'legend-game-directory' ); ?></option><?php foreach ( get_terms( array( 'taxonomy' => $taxonomy, 'hide_empty' => false ) ) as $term ) : ?><option value="<?php echo esc_attr( $term->slug ); ?>" <?php selected( isset( $_GET[ $name ] ) ? sanitize_title( wp_unslash( $_GET[ $name ] ) ) : '', $term->slug ); ?>><?php echo esc_html( $term->name ); ?></option><?php endforeach; ?></select></label><?php endforeach; ?>
+		<?php foreach ( $taxes as $name => $taxonomy ) : ?><label><span><?php echo esc_html( ucfirst( $name ) ); ?></span><select name="<?php echo esc_attr( $name ); ?>"><option value=""><?php esc_html_e( 'Any', 'legend-game-directory' ); ?></option><?php foreach ( get_terms( array( 'taxonomy' => $taxonomy, 'hide_empty' => true ) ) as $term ) : ?><option value="<?php echo esc_attr( $term->slug ); ?>" <?php selected( isset( $_GET[ $name ] ) ? sanitize_title( wp_unslash( $_GET[ $name ] ) ) : '', $term->slug ); ?>><?php echo esc_html( $term->name ); ?></option><?php endforeach; ?></select></label><?php endforeach; ?>
 		<label><span><?php esc_html_e( 'Minimum rating', 'legend-game-directory' ); ?></span><select name="rating"><option value=""><?php esc_html_e( 'Any', 'legend-game-directory' ); ?></option><?php foreach ( array( 90, 80, 70, 60 ) as $rating ) : ?><option value="<?php echo esc_attr( $rating ); ?>"><?php echo esc_html( $rating . '+' ); ?></option><?php endforeach; ?></select></label><button type="submit"><?php esc_html_e( 'Find games', 'legend-game-directory' ); ?></button></form><?php return ob_get_clean();
 	}
 
@@ -87,8 +101,22 @@ final class LGD_Frontend {
 	}
 
 	public static function card( $id ) {
-		$score = get_post_meta( $id, '_lgd_automated_score', true ); $types = wp_get_post_terms( $id, 'game_type', array( 'fields' => 'names' ) ); ob_start(); ?>
-		<article class="lgd-card"><a class="lgd-card-image" href="<?php echo esc_url( get_permalink( $id ) ); ?>"><?php echo get_the_post_thumbnail( $id, 'lgd-card', array( 'loading' => 'lazy' ) ); ?></a><div class="lgd-card-body"><div class="lgd-badges"><?php foreach ( $types as $type ) : ?><span><?php echo esc_html( str_replace( ' Games', '', $type ) ); ?></span><?php endforeach; ?></div><h3><a href="<?php echo esc_url( get_permalink( $id ) ); ?>"><?php echo esc_html( get_the_title( $id ) ); ?></a></h3><p><?php echo esc_html( wp_trim_words( get_the_excerpt( $id ), 20 ) ); ?></p><div class="lgd-card-footer"><span class="lgd-score <?php echo '' === (string) $score ? 'is-missing' : ''; ?>"><?php echo '' === (string) $score ? esc_html__( 'Not scored', 'legend-game-directory' ) : esc_html( round( $score ) ); ?></span><label><input type="checkbox" class="lgd-compare-choice" value="<?php echo esc_attr( $id ); ?>"> <?php esc_html_e( 'Compare', 'legend-game-directory' ); ?></label></div></div></article><?php return ob_get_clean();
+		$score = get_post_meta( $id, '_lgd_automated_score', true ); $types = wp_get_post_terms( $id, 'game_type', array( 'fields' => 'names' ) );
+		$thumb = get_the_post_thumbnail( $id, 'lgd-card', array( 'loading' => 'lazy' ) );
+		if ( ! $thumb ) {
+			$screens = get_post_meta( $id, '_lgd_official_screenshots', true );
+			if ( is_array( $screens ) && ! empty( $screens[0] ) ) {
+				$thumb = '<img src="' . esc_url( $screens[0] ) . '" alt="' . esc_attr( get_the_title( $id ) ) . '" loading="lazy" width="720" height="405">';
+			}
+		}
+		if ( ! $thumb ) {
+			// No real artwork available — render a branded title tile so the card never looks broken.
+			$title = get_the_title( $id );
+			$hue   = (int) round( hexdec( substr( md5( $title ), 0, 2 ) ) * 360 / 255 );
+			$thumb = '<span class="lgd-card-ph" style="--lgd-h:' . esc_attr( $hue ) . '">' . esc_html( $title ) . '</span>';
+		}
+		ob_start(); ?>
+		<article class="lgd-card"><a class="lgd-card-image" href="<?php echo esc_url( get_permalink( $id ) ); ?>"><?php echo $thumb; // already escaped ?></a><div class="lgd-card-body"><div class="lgd-badges"><?php foreach ( $types as $type ) : ?><span><?php echo esc_html( str_replace( ' Games', '', $type ) ); ?></span><?php endforeach; ?></div><h3><a href="<?php echo esc_url( get_permalink( $id ) ); ?>"><?php echo esc_html( get_the_title( $id ) ); ?></a></h3><p><?php echo esc_html( wp_trim_words( get_the_excerpt( $id ), 20 ) ); ?></p><div class="lgd-card-footer"><span class="lgd-score <?php echo '' === (string) $score ? 'is-missing' : ''; ?>"><?php echo '' === (string) $score ? esc_html__( 'Not scored', 'legend-game-directory' ) : esc_html( round( $score ) ); ?></span><label><input type="checkbox" class="lgd-compare-choice" value="<?php echo esc_attr( $id ); ?>"> <?php esc_html_e( 'Compare', 'legend-game-directory' ); ?></label></div></div></article><?php return ob_get_clean();
 	}
 
 	public function sources_shortcode( $atts ) {

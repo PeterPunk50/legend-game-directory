@@ -1,1 +1,6 @@
 .lgd-admin-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:16px;margin:20px 0}.lgd-admin-card{background:#fff;border:1px solid #dcdcde;border-radius:8px;padding:20px;display:flex;flex-direction:column}.lgd-admin-card strong{font-size:30px;color:#0b5cff}.lgd-admin-card span{margin-top:6px}.lgd-inline-form{display:flex;gap:12px;align-items:end;padding:14px 0;border-bottom:1px solid #ddd}.lgd-inline-form label{display:flex;flex-direction:column;min-width:320px;gap:5px}
+.lgd-admin-freshness{display:inline-block;font-size:.72rem;font-weight:700;text-transform:uppercase;padding:1px 7px;border-radius:999px;margin-left:8px}
+.lgd-admin-freshness.lgd-fresh-current{background:#edfaf4;color:#1a7a4a;border:1px solid #c3e8d5}
+.lgd-admin-freshness.lgd-fresh-aging{background:#fef9e7;color:#7d5a00;border:1px solid #f5e09a}
+.lgd-admin-freshness.lgd-fresh-outdated{background:#fce8ec;color:#8b1a2f;border:1px solid #f5b8c4}
+.lgd-admin-freshness.lgd-fresh-unverified{background:#f6f7f7;color:#6b7280;border:1px solid #d1d5db}
