@@ -26,6 +26,7 @@ final class LCC_Plugin {
 			'includes/class-lcc-referrals.php',
 			'includes/class-lcc-landing.php',
 			'includes/class-lcc-polls.php',
+			'includes/class-lcc-premium.php',
 		);
 	}
 
@@ -48,6 +49,7 @@ final class LCC_Plugin {
 		new LCC_Referrals();
 		new LCC_Landing();
 		new LCC_Polls();
+		new LCC_Premium();
 
 		add_action( 'admin_notices', array( $this, 'dependency_notice' ) );
 	}

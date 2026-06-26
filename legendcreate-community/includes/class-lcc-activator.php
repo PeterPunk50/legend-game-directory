@@ -92,6 +92,7 @@ final class LCC_Activator {
 			'lcc_page_play_cod'      => array( 'title' => 'Call of Duty Squads & Guides', 'slug' => 'play-call-of-duty', 'shortcode' => '[lcc_game_landing game="Call of Duty"]' ),
 			'lcc_page_play_cs'       => array( 'title' => 'Counter-Strike Squads & Guides', 'slug' => 'play-counter-strike', 'shortcode' => '[lcc_game_landing game="Counter-Strike"]' ),
 			'lcc_page_play_apex'     => array( 'title' => 'Apex Legends Squads & Guides', 'slug' => 'play-apex-legends', 'shortcode' => '[lcc_game_landing game="Apex Legends"]' ),
+			'lcc_page_premium'       => array( 'title' => 'Legend Premium', 'slug' => 'premium', 'shortcode' => '[lcc_premium]' ),
 		);
 		foreach ( $pages as $option => $page ) {
 			$existing = (int) get_option( $option, 0 );
