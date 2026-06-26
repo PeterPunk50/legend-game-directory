@@ -52,6 +52,14 @@ final class LCC_Landing {
 		echo $this->guides_html( $game );
 		echo '</section>';
 
+		// Polls for this game.
+		if ( class_exists( 'LCC_Polls' ) ) {
+			$polls = LCC_Polls::for_game( $game, 3 );
+			if ( $polls ) {
+				echo '<section class="lcc-landing-section"><div class="lcc-home-heading"><h2>' . esc_html( sprintf( __( '%s Community Polls', 'legendcreate-community' ), $game ) ) . '</h2></div>' . $polls . '</section>';
+			}
+		}
+
 		// Squads playing this game.
 		echo '<section class="lcc-landing-section"><div class="lcc-home-heading"><h2>' . esc_html( sprintf( __( '%s Squads', 'legendcreate-community' ), $game ) ) . '</h2>';
 		if ( $create ) {

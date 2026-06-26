@@ -6,7 +6,7 @@ if ( ! defined( 'ABSPATH' ) ) { exit; }
  */
 final class LCC_Activator {
 
-	const DB_VERSION = 4;
+	const DB_VERSION = 5;
 
 	public static function install() {
 		LCC_Roles::install_roles();
@@ -63,6 +63,18 @@ final class LCC_Activator {
 			PRIMARY KEY  (id),
 			UNIQUE KEY referred (referred_id),
 			KEY referrer (referrer_id)
+		) {$charset};" );
+
+		$votes = $wpdb->prefix . 'lcc_poll_votes';
+		dbDelta( "CREATE TABLE {$votes} (
+			id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+			poll_id BIGINT UNSIGNED NOT NULL,
+			option_idx INT NOT NULL DEFAULT 0,
+			user_id BIGINT UNSIGNED NOT NULL,
+			created_at DATETIME NOT NULL,
+			PRIMARY KEY  (id),
+			UNIQUE KEY poll_user (poll_id, user_id),
+			KEY poll (poll_id)
 		) {$charset};" );
 	}
 

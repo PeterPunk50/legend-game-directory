@@ -82,4 +82,15 @@
 .lcc-guide-card:hover{border-color:rgba(49,215,255,.4)}
 .lcc-landing-list{columns:2;gap:24px;color:var(--lcc-text)}
 @media(max-width:700px){.lcc-landing-guides{grid-template-columns:1fr}.lcc-landing-list{columns:1}}
+/* Polls */
+.lcc-poll-q{margin:0 0 12px}
+.lcc-poll-form{display:flex;flex-direction:column;gap:8px}
+.lcc-poll-choice{text-align:left;background:#07111f;color:var(--lcc-text);border:1px solid var(--lcc-border);border-radius:10px;padding:12px 14px;cursor:pointer;font-weight:600}
+.lcc-poll-choice:hover{border-color:var(--lcc-cyan);color:var(--lcc-cyan)}
+.lcc-poll-row{margin:8px 0}
+.lcc-poll-bar{position:relative;background:rgba(255,255,255,.07);border:1px solid var(--lcc-border);border-radius:10px;overflow:hidden;padding:11px 14px;display:flex;align-items:center;gap:10px}
+.lcc-poll-bar i{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(90deg,rgba(49,215,255,.28),rgba(168,117,255,.28));z-index:0}
+.lcc-poll-bar span{position:relative;z-index:1;flex:1;color:var(--lcc-text)}
+.lcc-poll-bar b{position:relative;z-index:1;color:var(--lcc-text)}
+.lcc-poll-row.is-mine .lcc-poll-bar{border-color:var(--lcc-cyan)}
 @media(max-width:700px){.lcc-grid{grid-template-columns:1fr}.lcc-squad-grid{grid-template-columns:1fr}}

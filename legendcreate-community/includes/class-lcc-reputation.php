@@ -23,6 +23,7 @@ final class LCC_Reputation {
 		'referral_activated' => 30,
 		'rating_submitted'   => 5,
 		'test_completed'     => 40,
+		'poll_vote'          => 2,
 	);
 
 	// slug => [ label, description ]
