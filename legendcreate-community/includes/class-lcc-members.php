@@ -21,8 +21,11 @@ final class LCC_Members {
 		if ( ! is_singular() ) { return; }
 		$post = get_post();
 		if ( ! $post ) { return; }
-		if ( has_shortcode( $post->post_content, 'lcc_dashboard' ) || has_shortcode( $post->post_content, 'lcc_onboarding' ) ) {
-			wp_enqueue_style( 'lcc-community', LCC_URL . 'assets/css/community.css', array(), LCC_VERSION );
+		foreach ( array( 'lcc_dashboard', 'lcc_onboarding', 'lcc_register', 'lcc_login' ) as $sc ) {
+			if ( has_shortcode( $post->post_content, $sc ) ) {
+				wp_enqueue_style( 'lcc-community', LCC_URL . 'assets/css/community.css', array(), LCC_VERSION );
+				return;
+			}
 		}
 	}
 
@@ -52,6 +55,15 @@ final class LCC_Members {
 		ob_start();
 		echo '<div class="lcc-shell">';
 		echo self::saved_notice();
+
+		if ( isset( $_GET['lcc_verified'] ) ) {
+			echo '1' === $_GET['lcc_verified']
+				? '<div class="lcc-notice lcc-notice-ok">' . esc_html__( 'Email confirmed — thank you!', 'legendcreate-community' ) . '</div>'
+				: '<div class="lcc-notice lcc-notice-err">' . esc_html__( 'That verification link was invalid or expired.', 'legendcreate-community' ) . '</div>';
+		}
+		if ( ! LCC_Registration::is_verified( $uid ) ) {
+			echo '<div class="lcc-notice lcc-notice-warn">' . esc_html__( 'Please check your email and confirm your account.', 'legendcreate-community' ) . '</div>';
+		}
 
 		// Header + membership badge.
 		echo '<div class="lcc-dash-head">';

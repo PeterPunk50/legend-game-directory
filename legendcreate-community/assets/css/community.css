@@ -17,7 +17,11 @@
 .lcc-btn-lg{font-size:1.05rem;padding:15px 26px}
 .lcc-notice{padding:12px 16px;border-radius:10px;margin-bottom:16px}
 .lcc-notice-ok{background:rgba(78,229,168,.14);color:var(--lcc-green);border:1px solid rgba(78,229,168,.3)}
+.lcc-notice-err{background:rgba(255,117,151,.14);color:#ff7597;border:1px solid rgba(255,117,151,.3)}
+.lcc-notice-warn{background:rgba(240,192,80,.14);color:#f0c050;border:1px solid rgba(240,192,80,.3)}
 .lcc-gate{text-align:center}
+.lcc-auth{max-width:460px;margin:0 auto}
+.lcc-hp{position:absolute!important;left:-9999px!important;height:0;overflow:hidden}
 /* Forms */
 .lcc-form{display:grid;gap:16px}
 .lcc-form label{display:flex;flex-direction:column;gap:6px;color:var(--lcc-muted);font-size:.9rem}

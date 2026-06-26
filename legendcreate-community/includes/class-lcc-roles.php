@@ -11,6 +11,7 @@ if ( ! defined( 'ABSPATH' ) ) { exit; }
  */
 final class LCC_Roles {
 
+	const ROLE_MEMBER = 'legend_member';
 	const ROLE_TESTER = 'legend_tester';
 
 	// Custom capabilities granted by this plugin.
@@ -24,6 +25,9 @@ final class LCC_Roles {
 	// ── Installation ─────────────────────────────────────────────────────────────
 
 	public static function install_roles() {
+		// Legend Member: the free membership role (subscriber-equivalent).
+		add_role( self::ROLE_MEMBER, __( 'Legend Member', 'legendcreate-community' ), array( 'read' => true ) );
+
 		// Legend Tester: a subscriber-equivalent with tester capabilities.
 		$tester_caps = array( 'read' => true );
 		foreach ( self::CAPS_TESTER as $cap ) { $tester_caps[ $cap ] = true; }
@@ -39,6 +43,7 @@ final class LCC_Roles {
 	}
 
 	public static function remove_roles() {
+		remove_role( self::ROLE_MEMBER );
 		remove_role( self::ROLE_TESTER );
 		$admin = get_role( 'administrator' );
 		if ( $admin ) {

@@ -22,6 +22,7 @@ final class LCC_Activator {
 	 */
 	private static function ensure_pages() {
 		$pages = array(
+			'lcc_page_register'   => array( 'title' => 'Join LegendCreate', 'slug' => 'join', 'shortcode' => '[lcc_register]' ),
 			'lcc_page_dashboard'  => array( 'title' => 'Member Dashboard', 'slug' => 'dashboard', 'shortcode' => '[lcc_dashboard]' ),
 			'lcc_page_onboarding' => array( 'title' => 'Get Started', 'slug' => 'get-started', 'shortcode' => '[lcc_onboarding]' ),
 		);
