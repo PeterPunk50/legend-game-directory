@@ -106,21 +106,44 @@ final class LGD_Engagement {
 		global $wpdb;
 		$id = absint( $request['id'] ); $table = LGD_Database::table( 'subscribers' );
 		$row = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$table} WHERE id=%d", $id ), ARRAY_A );
-		if ( ! $row || 'unsubscribed' === $row['status'] || ! wp_check_password( (string) $request['token'], $row['token_hash'] ) ) { return new WP_Error( 'lgd_alert_invalid', __( 'This confirmation link is invalid or has expired.', 'legend-game-directory' ), array( 'status' => 400 ) ); }
-		if ( strtotime( $row['created_at'] . ' UTC' ) < time() - 2 * DAY_IN_SECONDS ) { return new WP_Error( 'lgd_alert_expired', __( 'This confirmation link has expired. Please subscribe again.', 'legend-game-directory' ), array( 'status' => 400 ) ); }
-		$unsub = add_query_arg( array( 'id' => $id, 'token' => rawurlencode( (string) $request['token'] ) ), rest_url( 'lgd/v1/alerts/unsubscribe' ) );
+		if ( ! $row || 'unsubscribed' === $row['status'] || ! wp_check_password( (string) $request['token'], $row['token_hash'] ) ) {
+			return self::render_page( __( 'Link invalid', 'legend-game-directory' ), __( 'This confirmation link is invalid or has expired.', 'legend-game-directory' ) );
+		}
+		if ( strtotime( $row['created_at'] . ' UTC' ) < time() - 2 * DAY_IN_SECONDS ) {
+			return self::render_page( __( 'Link expired', 'legend-game-directory' ), __( 'This confirmation link has expired. Please subscribe again.', 'legend-game-directory' ) );
+		}
 		$wpdb->update( $table, array( 'status' => 'confirmed', 'confirmed_at' => current_time( 'mysql', true ) ), array( 'id' => $id ), array( '%s', '%s' ), array( '%d' ) );
 		LGD_Logger::log( 'alert_confirmed', 'Alert subscription confirmed.', array(), 'info' );
-		return rest_ensure_response( array( 'confirmed' => true, 'message' => __( 'Your game alerts are confirmed.', 'legend-game-directory' ), 'unsubscribe_url' => $unsub ) );
+		return self::render_page( __( 'Game alerts confirmed', 'legend-game-directory' ), __( "You're all set — you'll get alerts for new free and highly rated games.", 'legend-game-directory' ) );
 	}
 
 	public function unsubscribe( WP_REST_Request $request ) {
 		global $wpdb;
 		$id = absint( $request['id'] ); $table = LGD_Database::table( 'subscribers' );
 		$row = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$table} WHERE id=%d", $id ), ARRAY_A );
-		if ( ! $row || ! wp_check_password( (string) $request['token'], $row['token_hash'] ) ) { return new WP_Error( 'lgd_alert_invalid', __( 'This link is invalid.', 'legend-game-directory' ), array( 'status' => 400 ) ); }
+		if ( ! $row || ! wp_check_password( (string) $request['token'], $row['token_hash'] ) ) {
+			return self::render_page( __( 'Link invalid', 'legend-game-directory' ), __( 'This link is invalid.', 'legend-game-directory' ) );
+		}
 		$wpdb->update( $table, array( 'status' => 'unsubscribed' ), array( 'id' => $id ), array( '%s' ), array( '%d' ) );
-		return rest_ensure_response( array( 'unsubscribed' => true, 'message' => __( 'You have been unsubscribed from game alerts.', 'legend-game-directory' ) ) );
+		return self::render_page( __( 'Unsubscribed', 'legend-game-directory' ), __( 'You have been unsubscribed from game alerts.', 'legend-game-directory' ) );
+	}
+
+	/**
+	 * Render a small branded HTML page for email-link landings (confirm/unsubscribe)
+	 * instead of returning raw JSON to the browser. Outputs and exits.
+	 */
+	private static function render_page( $title, $message ) {
+		if ( ! headers_sent() ) {
+			status_header( 200 );
+			header( 'Content-Type: text/html; charset=utf-8' );
+			nocache_headers();
+		}
+		$home = home_url( '/' );
+		$name = get_bloginfo( 'name' );
+		echo '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>' . esc_html( $title ) . '</title>';
+		echo '<style>body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif;background:#07111f;color:#f6f8fc;display:flex;min-height:100vh;align-items:center;justify-content:center;padding:24px}.box{max-width:480px;width:100%;text-align:center;background:#101c2d;border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:40px 32px}.box h1{font-size:1.5rem;margin:0 0 12px}.box p{color:#a9b7ca;margin:0 0 24px;line-height:1.5}.box a{display:inline-block;background:linear-gradient(135deg,#31d7ff,#a875ff);color:#07111f;font-weight:800;text-decoration:none;padding:13px 22px;border-radius:10px}</style></head><body>';
+		echo '<div class="box"><h1>' . esc_html( $title ) . '</h1><p>' . esc_html( $message ) . '</p><a href="' . esc_url( $home ) . '">' . esc_html( sprintf( __( 'Back to %s', 'legend-game-directory' ), $name ) ) . '</a></div></body></html>';
+		exit;
 	}
 
 	public function newsletter_shortcode() {
