@@ -1,0 +1,35 @@
+/* LegendCreate Community — member UI */
+.lcc-shell{--lcc-bg:#07111f;--lcc-panel:#101c2d;--lcc-panel2:#16263c;--lcc-text:#f6f8fc;--lcc-muted:#a9b7ca;--lcc-cyan:#31d7ff;--lcc-purple:#a875ff;--lcc-green:#4ee5a8;--lcc-border:rgba(255,255,255,.12);color:var(--lcc-text)}
+.lcc-shell h2,.lcc-shell h3{color:var(--lcc-text);margin:.2em 0 .5em}
+.lcc-muted{color:var(--lcc-muted)}
+.lcc-link{color:var(--lcc-cyan);text-decoration:none}
+.lcc-panel{background:var(--lcc-panel);border:1px solid var(--lcc-border);border-radius:14px;padding:20px;margin:0 0 18px}
+.lcc-dash-head{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:18px;flex-wrap:wrap}
+.lcc-badge{display:inline-block;font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;font-weight:800;padding:5px 11px;border-radius:999px}
+.lcc-badge-free{background:rgba(49,215,255,.14);color:var(--lcc-cyan);border:1px solid rgba(49,215,255,.3)}
+.lcc-badge-premium{background:linear-gradient(135deg,var(--lcc-cyan),var(--lcc-purple));color:#07111f}
+.lcc-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.lcc-prog{height:12px;background:rgba(255,255,255,.1);border-radius:999px;overflow:hidden;margin-top:8px}
+.lcc-prog i{display:block;height:100%;background:linear-gradient(90deg,var(--lcc-cyan),var(--lcc-purple))}
+.lcc-prog-label{font-weight:700;font-size:.9rem}
+.lcc-cta{border-left:4px solid var(--lcc-cyan)}
+.lcc-btn{display:inline-block;border:0;border-radius:10px;padding:12px 18px;background:linear-gradient(135deg,var(--lcc-cyan),var(--lcc-purple));color:#07111f;font-weight:800;cursor:pointer;text-decoration:none}
+.lcc-btn-lg{font-size:1.05rem;padding:15px 26px}
+.lcc-notice{padding:12px 16px;border-radius:10px;margin-bottom:16px}
+.lcc-notice-ok{background:rgba(78,229,168,.14);color:var(--lcc-green);border:1px solid rgba(78,229,168,.3)}
+.lcc-gate{text-align:center}
+/* Forms */
+.lcc-form{display:grid;gap:16px}
+.lcc-form label{display:flex;flex-direction:column;gap:6px;color:var(--lcc-muted);font-size:.9rem}
+.lcc-form input[type=text],.lcc-form textarea{background:#07111f;color:var(--lcc-text);border:1px solid var(--lcc-border);border-radius:9px;padding:11px;min-height:42px;width:100%;box-sizing:border-box}
+.lcc-form fieldset{border:1px solid var(--lcc-border);border-radius:12px;padding:14px}
+.lcc-form legend{color:var(--lcc-muted);font-size:.82rem;padding:0 6px}
+.lcc-check{flex-direction:row!important;align-items:center;gap:8px;display:inline-flex!important;margin:4px 14px 4px 0;color:var(--lcc-text)!important}
+.lcc-gid-row{display:flex;align-items:flex-end;gap:14px;margin-bottom:8px;flex-wrap:wrap}
+.lcc-gid-row label:first-child{flex:1;min-width:220px}
+.lcc-pub{white-space:nowrap}
+/* Onboarding steps */
+.lcc-onboarding .lcc-step{background:var(--lcc-panel);border:1px solid var(--lcc-border);border-radius:14px;padding:20px;position:relative}
+.lcc-step-n{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--lcc-cyan),var(--lcc-purple));color:#07111f;font-weight:900;margin-right:8px}
+.lcc-onboarding .lcc-step h3{display:inline}
+@media(max-width:700px){.lcc-grid{grid-template-columns:1fr}}

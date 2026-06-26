@@ -18,6 +18,8 @@ final class LCC_Plugin {
 			'includes/class-lcc-activator.php',
 			'includes/class-lcc-roles.php',
 			'includes/class-lcc-memberships.php',
+			'includes/class-lcc-profiles.php',
+			'includes/class-lcc-members.php',
 		);
 	}
 
@@ -32,6 +34,8 @@ final class LCC_Plugin {
 
 		new LCC_Roles();
 		new LCC_Memberships();
+		new LCC_Profiles();
+		new LCC_Members();
 
 		add_action( 'admin_notices', array( $this, 'dependency_notice' ) );
 	}
