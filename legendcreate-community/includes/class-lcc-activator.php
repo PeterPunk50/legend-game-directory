@@ -6,7 +6,7 @@ if ( ! defined( 'ABSPATH' ) ) { exit; }
  */
 final class LCC_Activator {
 
-	const DB_VERSION = 2;
+	const DB_VERSION = 3;
 
 	public static function install() {
 		LCC_Roles::install_roles();
@@ -35,6 +35,20 @@ final class LCC_Activator {
 			UNIQUE KEY squad_user (squad_id, user_id),
 			KEY squad (squad_id),
 			KEY user (user_id)
+		) {$charset};" );
+
+		$points = $wpdb->prefix . 'lcc_points_log';
+		dbDelta( "CREATE TABLE {$points} (
+			id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+			user_id BIGINT UNSIGNED NOT NULL,
+			action VARCHAR(40) NOT NULL,
+			points INT NOT NULL DEFAULT 0,
+			ref_type VARCHAR(20) NOT NULL DEFAULT '',
+			ref_id BIGINT UNSIGNED NOT NULL DEFAULT 0,
+			created_at DATETIME NOT NULL,
+			PRIMARY KEY  (id),
+			KEY user (user_id),
+			KEY user_action_ref (user_id, action, ref_id)
 		) {$charset};" );
 	}
 

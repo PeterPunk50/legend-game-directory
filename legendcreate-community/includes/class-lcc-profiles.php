@@ -160,6 +160,8 @@ final class LCC_Profiles {
 		if ( isset( $data['public'] ) ) {
 			update_user_meta( $user_id, 'lcc_public_profile', $data['public'] ? 1 : 0 );
 		}
+
+		do_action( 'lcc_profile_saved', $user_id );
 	}
 
 	// ── Front-end save handler ───────────────────────────────────────────────────

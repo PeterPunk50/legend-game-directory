@@ -101,7 +101,10 @@ final class LCC_Members {
 		if ( class_exists( 'LCC_Squads' ) ) {
 			echo LCC_Squads::render_my_squads( $uid );
 		}
-		echo '<h3 style="margin-top:18px">' . esc_html__( 'Points & Badges', 'legendcreate-community' ) . '</h3><p class="lcc-muted">' . esc_html__( 'Earn points by rating games, testing, and helping the community.', 'legendcreate-community' ) . '</p></div>';
+		if ( class_exists( 'LCC_Reputation' ) ) {
+			echo '<div style="margin-top:18px">' . LCC_Reputation::render( $uid ) . '</div>';
+		}
+		echo '</div>';
 		echo '</div>';
 
 		// Edit profile form.
