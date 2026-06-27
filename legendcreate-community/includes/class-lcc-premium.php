@@ -100,7 +100,17 @@ final class LCC_Premium {
 			echo '<span class="lcc-join-price">' . self::price_html( $monthly ) . ' <small>' . esc_html__( '/mo', 'legendcreate-community' ) . '</small> · ' . self::price_html( $annual ) . ' <small>' . esc_html__( '/yr', 'legendcreate-community' ) . '</small></span>';
 		}
 		echo '</div><p class="lcc-muted">' . esc_html__( 'Everything free, plus premium guides, early access, priority testing, advanced squad tools, and an ad-reduced experience.', 'legendcreate-community' ) . '</p>';
-		echo '<p class="lcc-muted lcc-join-note">' . esc_html__( 'Upgrade anytime after you join — one-time payment, no auto-renewal.', 'legendcreate-community' ) . '</p></div>';
+
+		if ( function_exists( 'wc_get_checkout_url' ) && ( $monthly || $annual ) ) {
+			$join = (int) get_option( 'lcc_page_register', 0 );
+			$base = $join ? get_permalink( $join ) : home_url( '/join/' );
+			echo '<div class="lcc-join-buy">';
+			if ( $monthly ) { echo '<a class="lcc-btn lcc-btn-ghost" href="' . esc_url( add_query_arg( 'buy', 'monthly', $base ) ) . '#lcc-join-form">' . esc_html__( 'Get Monthly', 'legendcreate-community' ) . '</a>'; }
+			if ( $annual ) { echo '<a class="lcc-btn" href="' . esc_url( add_query_arg( 'buy', 'annual', $base ) ) . '#lcc-join-form">' . esc_html__( 'Get Annual', 'legendcreate-community' ) . '</a>'; }
+			echo '</div>';
+		}
+
+		echo '<p class="lcc-muted lcc-join-note">' . esc_html__( 'One-time payment, no auto-renewal. Choosing a plan creates your account, then takes you to secure checkout.', 'legendcreate-community' ) . '</p></div>';
 		echo '</div>';
 		return ob_get_clean();
 	}

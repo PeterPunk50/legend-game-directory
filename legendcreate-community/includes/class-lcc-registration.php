@@ -51,6 +51,10 @@ final class LCC_Registration {
 		$ref = '';
 		if ( ! empty( $_GET['ref'] ) ) { $ref = strtoupper( sanitize_text_field( wp_unslash( $_GET['ref'] ) ) ); }
 		elseif ( ! empty( $_COOKIE['lcc_ref'] ) ) { $ref = strtoupper( sanitize_text_field( wp_unslash( $_COOKIE['lcc_ref'] ) ) ); }
+		$buy_id = 0;
+		if ( ! empty( $_GET['buy'] ) && class_exists( 'LCC_Premium' ) ) {
+			$buy_id = LCC_Premium::product_id( 'annual' === sanitize_key( wp_unslash( $_GET['buy'] ) ) ? 'annual' : 'monthly' );
+		}
 		$rules_page = get_page_by_path( 'community-rules', OBJECT, 'page' );
 
 		ob_start(); ?>
@@ -61,7 +65,7 @@ final class LCC_Registration {
 			</div>
 			<div class="lcc-join-grid">
 				<?php if ( class_exists( 'LCC_Premium' ) ) { echo LCC_Premium::pricing_summary(); } ?>
-				<div class="lcc-panel lcc-join-form">
+				<div class="lcc-panel lcc-join-form" id="lcc-join-form">
 					<h3><?php esc_html_e( 'Create your free account', 'legendcreate-community' ); ?></h3>
 					<?php if ( $err && isset( self::ERRORS[ $err ] ) ) : ?>
 						<div class="lcc-notice lcc-notice-err"><?php echo esc_html( self::ERRORS[ $err ] ); ?></div>
@@ -71,6 +75,8 @@ final class LCC_Registration {
 					<input type="hidden" name="action" value="lcc_register">
 					<div class="lcc-hp" aria-hidden="true"><label>Leave this empty<input type="text" name="lcc_hp" tabindex="-1" autocomplete="off"></label></div>
 					<?php if ( $ref ) : ?><input type="hidden" name="lcc_ref" value="<?php echo esc_attr( $ref ); ?>"><?php endif; ?>
+					<?php if ( $buy_id ) : ?><input type="hidden" name="lcc_buy" value="<?php echo esc_attr( $buy_id ); ?>">
+						<div class="lcc-notice lcc-notice-ok"><?php esc_html_e( 'Premium selected — create your account and you’ll continue straight to secure checkout.', 'legendcreate-community' ); ?></div><?php endif; ?>
 
 					<label><?php esc_html_e( 'Display name', 'legendcreate-community' ); ?>
 						<input type="text" name="lcc_display" required maxlength="50"></label>
@@ -93,7 +99,7 @@ final class LCC_Registration {
 						?>
 					</label>
 
-					<button type="submit" class="lcc-btn lcc-btn-lg"><?php esc_html_e( 'Create my free account', 'legendcreate-community' ); ?></button>
+					<button type="submit" class="lcc-btn lcc-btn-lg"><?php echo $buy_id ? esc_html__( 'Create account & continue to payment', 'legendcreate-community' ) : esc_html__( 'Create my free account', 'legendcreate-community' ); ?></button>
 				</form>
 					<p class="lcc-muted"><?php esc_html_e( 'Already a member?', 'legendcreate-community' ); ?> <a class="lcc-link" href="<?php echo esc_url( wp_login_url( home_url( '/dashboard/' ) ) ); ?>"><?php esc_html_e( 'Log in', 'legendcreate-community' ); ?></a></p>
 				</div>
@@ -166,10 +172,18 @@ final class LCC_Registration {
 		$ref = isset( $_POST['lcc_ref'] ) ? strtoupper( sanitize_text_field( wp_unslash( $_POST['lcc_ref'] ) ) ) : '';
 		do_action( 'lcc_member_registered', $user_id, $ref );
 
-		// Auto-login and route into onboarding.
+		// Auto-login.
 		wp_set_current_user( $user_id );
 		wp_set_auth_cookie( $user_id, true );
 
+		// If they chose a Premium plan on the Join page, go straight to checkout.
+		$buy = isset( $_POST['lcc_buy'] ) ? absint( $_POST['lcc_buy'] ) : 0;
+		if ( $buy && 'product' === get_post_type( $buy ) && function_exists( 'wc_get_checkout_url' ) ) {
+			wp_safe_redirect( add_query_arg( 'add-to-cart', $buy, wc_get_checkout_url() ) );
+			exit;
+		}
+
+		// Otherwise route into onboarding.
 		$onb = lcc_onboarding_page();
 		wp_safe_redirect( add_query_arg( 'welcome', '1', $onb ? get_permalink( $onb ) : home_url( '/dashboard/' ) ) );
 		exit;

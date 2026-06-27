@@ -128,5 +128,7 @@
 .lcc-join-price{font-weight:900;color:var(--lcc-cyan)}
 .lcc-join-price small{color:var(--lcc-muted);font-weight:600}
 .lcc-join-note{font-size:.8rem;margin-bottom:0}
+.lcc-join-buy{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0 4px}
+.lcc-join-buy .lcc-btn{flex:1;text-align:center}
 @media(max-width:760px){.lcc-join-grid{grid-template-columns:1fr}}
 @media(max-width:700px){.lcc-grid{grid-template-columns:1fr}.lcc-squad-grid{grid-template-columns:1fr}}
