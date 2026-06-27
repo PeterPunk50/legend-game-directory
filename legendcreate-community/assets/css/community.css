@@ -5,6 +5,8 @@
 .lcc-shell a{color:var(--lcc-cyan)}
 .lcc-shell input,.lcc-shell textarea,.lcc-shell select{color:var(--lcc-text);background:#07111f}
 .lcc-muted,.lcc-shell .lcc-muted{color:var(--lcc-muted)}
+/* Hide the theme's duplicate page title (this stylesheet only loads on membership pages). */
+.entry-title,.page-title,.entry-header .entry-title,.page-header .entry-title{display:none!important}
 .lcc-link{color:var(--lcc-cyan);text-decoration:none}
 .lcc-panel{background:var(--lcc-panel);border:1px solid var(--lcc-border);border-radius:14px;padding:20px;margin:0 0 18px}
 .lcc-dash-head{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:18px;flex-wrap:wrap}
