@@ -121,6 +121,9 @@
 .lcc-join-form{max-width:560px;margin:28px auto 0}
 .lcc-join-form h3{margin-top:0}
 .lcc-btn-block{display:block;width:100%;text-align:center;box-sizing:border-box}
+/* Anchor buttons inside .lcc-shell: keep dark readable label (override the link-color rule) */
+.lcc-shell a.lcc-btn{color:#07111f;text-decoration:none}
+.lcc-shell a.lcc-btn-ghost{color:var(--lcc-text)}
 .lcc-pcards{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;align-items:stretch}
 .lcc-pcard{position:relative;display:flex;flex-direction:column;background:var(--lcc-panel);border:1px solid var(--lcc-border);border-radius:18px;padding:26px 24px}
 .lcc-pcard-rec{border-color:var(--lcc-cyan);background:linear-gradient(180deg,rgba(49,215,255,.07),var(--lcc-panel))}
