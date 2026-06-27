@@ -126,7 +126,7 @@ final class LCC_Premium {
 			return $h . '</ul></div>';
 		};
 
-		$free_cta = ''; // The signup form below is the free-account action.
+		$free_cta = '<a class="lcc-btn lcc-btn-block lcc-btn-ghost" href="' . esc_url( add_query_arg( 'plan', 'free', $base ) ) . '#lcc-join-form">' . esc_html__( 'Create free account', 'legendcreate-community' ) . '</a>';
 		$m_cta    = ( $wc && $monthly ) ? '<a class="lcc-btn lcc-btn-block" href="' . esc_url( add_query_arg( 'buy', 'monthly', $base ) ) . '#lcc-join-form">' . esc_html__( 'Get Monthly', 'legendcreate-community' ) . '</a>' : '';
 		$a_cta    = ( $wc && $annual ) ? '<a class="lcc-btn lcc-btn-block" href="' . esc_url( add_query_arg( 'buy', 'annual', $base ) ) . '#lcc-join-form">' . esc_html__( 'Get Annual', 'legendcreate-community' ) . '</a>' : '';
 
