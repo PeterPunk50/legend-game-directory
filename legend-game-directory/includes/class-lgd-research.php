@@ -117,6 +117,9 @@ final class LGD_Research {
 						<input type="text" name="game_name" class="regular-text" placeholder="<?php esc_attr_e( 'or type a game name (e.g. Fortnite)', 'legend-game-directory' ); ?>"></td></tr>
 					<tr><th><label><?php esc_html_e( 'Season / Patch', 'legend-game-directory' ); ?></label></th>
 						<td><input type="text" name="season" class="regular-text" placeholder="<?php esc_attr_e( 'Season', 'legend-game-directory' ); ?>"> <input type="text" name="patch" class="regular-text" placeholder="<?php esc_attr_e( 'Patch / version', 'legend-game-directory' ); ?>"></td></tr>
+					<tr><th><label><?php esc_html_e( 'Paste content (recommended)', 'legend-game-directory' ); ?></label></th>
+						<td><textarea name="source_text" rows="8" class="large-text" placeholder="<?php esc_attr_e( 'Paste the relevant text or your own notes here. The AI extracts structured notes from this instead of fetching the URL. Use this for official sites that block automated access (e.g. Call of Duty, Fortnite).', 'legend-game-directory' ); ?>"></textarea>
+						<p class="description"><?php esc_html_e( 'If you paste content, the URL is kept only as the reference link — no automated fetch happens. Leave empty to auto-fetch the URL.', 'legend-game-directory' ); ?></p></td></tr>
 				</table>
 				<?php submit_button( __( 'Fetch & Extract Evidence', 'legend-game-directory' ) ); ?>
 			</form>
@@ -159,42 +162,47 @@ final class LGD_Research {
 		if ( ! $url || ! wp_http_validate_url( $url ) ) {
 			$this->bail( $back, __( 'Please provide a valid public source URL.', 'legend-game-directory' ) );
 		}
-		if ( ! self::robots_allow( $url ) ) {
-			$this->bail( $back, __( 'That source disallows automated access in its robots.txt. Add the notes manually instead.', 'legend-game-directory' ) );
-		}
-
 		$source_type = isset( $_POST['source_type'] ) && isset( self::SOURCE_TYPES[ $_POST['source_type'] ] ) ? sanitize_key( wp_unslash( $_POST['source_type'] ) ) : 'official_site';
 		$game_id     = isset( $_POST['game_id'] ) ? absint( $_POST['game_id'] ) : 0;
 		$game_name   = isset( $_POST['game_name'] ) ? sanitize_text_field( wp_unslash( $_POST['game_name'] ) ) : '';
 		if ( $game_id && 'game' === get_post_type( $game_id ) ) { $game_name = get_the_title( $game_id ); }
 		$season = isset( $_POST['season'] ) ? sanitize_text_field( wp_unslash( $_POST['season'] ) ) : '';
 		$patch  = isset( $_POST['patch'] ) ? sanitize_text_field( wp_unslash( $_POST['patch'] ) ) : '';
+		$pasted = isset( $_POST['source_text'] ) ? trim( sanitize_textarea_field( wp_unslash( $_POST['source_text'] ) ) ) : '';
 
-		// Fetch the page safely.
-		$response = wp_remote_get( $url, array(
-			'timeout'             => self::TIMEOUT,
-			'redirection'         => 3,
-			'reject_unsafe_urls'  => true,
-			'limit_response_size' => self::FETCH_LIMIT,
-			'headers'             => array(
-				'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36',
-				'Accept'     => 'text/html,application/xhtml+xml;q=0.9,*/*;q=0.8',
-			),
-		) );
-		if ( is_wp_error( $response ) ) {
-			LGD_Logger::log( 'research_fetch_error', 'Research fetch failed.', array( 'url' => $url, 'error' => $response->get_error_message() ), 'warning' );
-			$this->bail( $back, sprintf( __( 'Could not fetch that source: %s', 'legend-game-directory' ), $response->get_error_message() ) );
-		}
-		$code = (int) wp_remote_retrieve_response_code( $response );
-		if ( $code < 200 || $code >= 300 ) {
-			$this->bail( $back, sprintf( __( 'Source returned HTTP %d.', 'legend-game-directory' ), $code ) );
-		}
-
-		$html  = wp_remote_retrieve_body( $response );
-		$title = self::extract_title( $html ) ?: wp_parse_url( $url, PHP_URL_HOST );
-		$text  = self::readable_text( $html );
-		if ( strlen( $text ) < 200 ) {
-			$this->bail( $back, __( 'The source had too little readable text to extract evidence from.', 'legend-game-directory' ) );
+		if ( '' !== $pasted ) {
+			// Editor pasted content/notes — no automated fetch. Robots-safe and ideal for
+			// official sites behind bot protection (Cloudflare/Akamai) that refuse server requests.
+			$title = wp_parse_url( $url, PHP_URL_HOST );
+			$text  = $pasted;
+		} else {
+			if ( ! self::robots_allow( $url ) ) {
+				$this->bail( $back, __( 'That source disallows automated access in its robots.txt. Paste the relevant content into the box below instead.', 'legend-game-directory' ) );
+			}
+			$response = wp_remote_get( $url, array(
+				'timeout'             => self::TIMEOUT,
+				'redirection'         => 3,
+				'reject_unsafe_urls'  => true,
+				'limit_response_size' => self::FETCH_LIMIT,
+				'headers'             => array(
+					'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36',
+					'Accept'     => 'text/html,application/xhtml+xml;q=0.9,*/*;q=0.8',
+				),
+			) );
+			if ( is_wp_error( $response ) ) {
+				LGD_Logger::log( 'research_fetch_error', 'Research fetch failed.', array( 'url' => $url, 'error' => $response->get_error_message() ), 'warning' );
+				$this->bail( $back, sprintf( __( 'Could not fetch that source: %s — many official sites block server requests, so paste the content into the box instead.', 'legend-game-directory' ), $response->get_error_message() ) );
+			}
+			$code = (int) wp_remote_retrieve_response_code( $response );
+			if ( $code < 200 || $code >= 300 ) {
+				$this->bail( $back, sprintf( __( 'Source returned HTTP %d — paste the content into the box instead.', 'legend-game-directory' ), $code ) );
+			}
+			$html  = wp_remote_retrieve_body( $response );
+			$title = self::extract_title( $html ) ?: wp_parse_url( $url, PHP_URL_HOST );
+			$text  = self::readable_text( $html );
+			if ( strlen( $text ) < 200 ) {
+				$this->bail( $back, __( 'The source had too little readable text. Paste the relevant content into the box instead.', 'legend-game-directory' ) );
+			}
 		}
 
 		// AI extraction (original paraphrase, no full-article copy).
