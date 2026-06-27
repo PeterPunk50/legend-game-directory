@@ -27,6 +27,7 @@ final class LCC_Plugin {
 			'includes/class-lcc-landing.php',
 			'includes/class-lcc-polls.php',
 			'includes/class-lcc-premium.php',
+			'includes/class-lcc-menu.php',
 		);
 	}
 
@@ -50,6 +51,7 @@ final class LCC_Plugin {
 		new LCC_Landing();
 		new LCC_Polls();
 		new LCC_Premium();
+		new LCC_Menu();
 
 		add_action( 'admin_notices', array( $this, 'dependency_notice' ) );
 	}
