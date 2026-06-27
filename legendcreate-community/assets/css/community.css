@@ -1,5 +1,7 @@
 /* LegendCreate Community — member UI */
-.lcc-shell{--lcc-bg:#07111f;--lcc-panel:#101c2d;--lcc-panel2:#16263c;--lcc-text:#f6f8fc;--lcc-muted:#a9b7ca;--lcc-cyan:#31d7ff;--lcc-purple:#a875ff;--lcc-green:#4ee5a8;--lcc-border:rgba(255,255,255,.12);color:var(--lcc-text);background:var(--lcc-bg);padding:clamp(18px,3vw,32px);border-radius:16px;margin:16px 0}
+.lcc-shell{--lcc-bg:#07111f;--lcc-panel:#101c2d;--lcc-panel2:#16263c;--lcc-text:#f6f8fc;--lcc-muted:#a9b7ca;--lcc-cyan:#31d7ff;--lcc-purple:#a875ff;--lcc-green:#4ee5a8;--lcc-border:rgba(255,255,255,.12);color:var(--lcc-text);background:var(--lcc-bg);padding:clamp(20px,3vw,40px);border-radius:16px;margin:16px auto;max-width:1340px;width:100%;box-sizing:border-box}
+/* Widen the theme content wrapper on membership pages (this CSS only loads here). */
+.page .entry-content,.page .site-main,.page .content-area,.page #primary,.page .container{max-width:none!important;width:auto!important}
 .lcc-shell h1,.lcc-shell h2,.lcc-shell h3,.lcc-shell h4{color:var(--lcc-text);margin:.2em 0 .5em}
 .lcc-shell p,.lcc-shell li,.lcc-shell strong,.lcc-shell label,.lcc-shell td,.lcc-shell th{color:var(--lcc-text)}
 .lcc-shell a{color:var(--lcc-cyan)}
@@ -124,20 +126,20 @@
 /* Anchor buttons inside .lcc-shell: keep dark readable label (override the link-color rule) */
 .lcc-shell a.lcc-btn{color:#07111f;text-decoration:none}
 .lcc-shell a.lcc-btn-ghost{color:var(--lcc-text)}
-.lcc-pcards{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;align-items:stretch}
-.lcc-pcard{position:relative;display:flex;flex-direction:column;background:var(--lcc-panel);border:1px solid var(--lcc-border);border-radius:18px;padding:26px 24px}
+.lcc-pcards{display:grid;grid-template-columns:repeat(3,1fr);gap:26px;align-items:stretch;max-width:1280px;margin:0 auto}
+.lcc-pcard{position:relative;display:flex;flex-direction:column;background:var(--lcc-panel);border:1px solid var(--lcc-border);border-radius:20px;padding:40px 34px}
 .lcc-pcard-rec{border-color:var(--lcc-cyan);background:linear-gradient(180deg,rgba(49,215,255,.07),var(--lcc-panel))}
-.lcc-pcard-badge{position:absolute;top:18px;right:18px;font-size:.62rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em;padding:4px 10px;border-radius:999px;background:linear-gradient(135deg,var(--lcc-cyan),var(--lcc-purple));color:#07111f}
-.lcc-pcard-name{margin:0 0 12px;font-size:1.5rem;color:var(--lcc-text)}
-.lcc-pcard-price{display:flex;align-items:baseline;gap:8px;margin-bottom:8px}
-.lcc-pcard-amt{font-size:2.4rem;font-weight:900;color:var(--lcc-text);line-height:1}
+.lcc-pcard-badge{position:absolute;top:22px;right:22px;font-size:.66rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em;padding:5px 12px;border-radius:999px;background:linear-gradient(135deg,var(--lcc-cyan),var(--lcc-purple));color:#07111f}
+.lcc-pcard-name{margin:0 0 16px;font-size:2rem;color:var(--lcc-text)}
+.lcc-pcard-price{display:flex;align-items:baseline;gap:10px;margin-bottom:10px}
+.lcc-pcard-amt{font-size:3.4rem;font-weight:900;color:var(--lcc-text);line-height:1}
 .lcc-pcard-amt .woocommerce-Price-amount{font-size:inherit}
-.lcc-pcard-unit{color:var(--lcc-muted);font-size:.9rem}
-.lcc-pcard-desc{color:var(--lcc-muted);margin:0 0 18px;min-height:2.6em}
-.lcc-pcard .lcc-btn{margin-bottom:20px}
+.lcc-pcard-unit{color:var(--lcc-muted);font-size:1rem}
+.lcc-pcard-desc{color:var(--lcc-muted);margin:0 0 24px;min-height:3em;font-size:1.05rem}
+.lcc-pcard .lcc-btn{margin-bottom:26px;padding:15px 18px;font-size:1.05rem}
 .lcc-pcard-list{list-style:none;margin:0;padding:0}
-.lcc-pcard-list li{padding:7px 0 7px 26px;position:relative;color:var(--lcc-text);font-size:.92rem}
-.lcc-pcard-list li::before{content:"\2713";position:absolute;left:0;color:var(--lcc-green);font-weight:900}
-.lcc-join-note{font-size:.8rem;margin:14px 0 0}
+.lcc-pcard-list li{padding:10px 0 10px 30px;position:relative;color:var(--lcc-text);font-size:1.02rem}
+.lcc-pcard-list li::before{content:"\2713";position:absolute;left:0;color:var(--lcc-green);font-weight:900;font-size:1.05rem}
+.lcc-join-note{font-size:.85rem;margin:18px 0 0}
 @media(max-width:860px){.lcc-pcards{grid-template-columns:1fr}}
 @media(max-width:700px){.lcc-grid{grid-template-columns:1fr}.lcc-squad-grid{grid-template-columns:1fr}}
