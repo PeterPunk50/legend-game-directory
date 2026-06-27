@@ -114,39 +114,33 @@ final class LCC_Premium {
 			__( 'Monthly premium recommendations', 'legendcreate-community' ),
 		);
 
-		$card = function ( $title, $price_html, $features, $button = '', $tag = '', $premium = false ) {
-			$h  = '<div class="lcc-tier' . ( $premium ? ' lcc-tier-premium' : '' ) . '">';
-			$h .= '<div class="lcc-tier-top"><strong>' . esc_html( $title ) . ( $tag ? ' <span class="lcc-tier-tag">' . esc_html( $tag ) . '</span>' : '' ) . '</strong>';
-			$h .= '<span class="lcc-tier-price">' . $price_html . '</span></div>';
-			$h .= '<ul class="lcc-tier-list">';
+		$card = function ( $name, $price_html, $desc, $cta_html, $features, $rec = false ) {
+			$h  = '<div class="lcc-pcard' . ( $rec ? ' lcc-pcard-rec' : '' ) . '">';
+			if ( $rec ) { $h .= '<span class="lcc-pcard-badge">' . esc_html__( 'Best value', 'legendcreate-community' ) . '</span>'; }
+			$h .= '<h3 class="lcc-pcard-name">' . esc_html( $name ) . '</h3>';
+			$h .= '<div class="lcc-pcard-price">' . $price_html . '</div>';
+			$h .= '<p class="lcc-pcard-desc">' . esc_html( $desc ) . '</p>';
+			$h .= $cta_html;
+			$h .= '<ul class="lcc-pcard-list">';
 			foreach ( $features as $f ) { $h .= '<li>' . esc_html( $f ) . '</li>'; }
-			$h .= '</ul>';
-			if ( $button ) { $h .= $button; }
-			return $h . '</div>';
+			return $h . '</ul></div>';
 		};
 
-		$m_btn = ( $wc && $monthly ) ? '<a class="lcc-btn lcc-btn-ghost" href="' . esc_url( add_query_arg( 'buy', 'monthly', $base ) ) . '#lcc-join-form">' . esc_html__( 'Get Monthly', 'legendcreate-community' ) . '</a>' : '';
-		$a_btn = ( $wc && $annual ) ? '<a class="lcc-btn" href="' . esc_url( add_query_arg( 'buy', 'annual', $base ) ) . '#lcc-join-form">' . esc_html__( 'Get Annual', 'legendcreate-community' ) . '</a>' : '';
+		$free_cta = '<a class="lcc-btn lcc-btn-block lcc-btn-ghost" href="#lcc-join-form">' . esc_html__( 'Create free account', 'legendcreate-community' ) . '</a>';
+		$m_cta    = ( $wc && $monthly ) ? '<a class="lcc-btn lcc-btn-block" href="' . esc_url( add_query_arg( 'buy', 'monthly', $base ) ) . '#lcc-join-form">' . esc_html__( 'Get Monthly', 'legendcreate-community' ) . '</a>' : '';
+		$a_cta    = ( $wc && $annual ) ? '<a class="lcc-btn lcc-btn-block" href="' . esc_url( add_query_arg( 'buy', 'annual', $base ) ) . '#lcc-join-form">' . esc_html__( 'Get Annual', 'legendcreate-community' ) . '</a>' : '';
+
+		$free_price = '<span class="lcc-pcard-amt">' . esc_html__( 'Free', 'legendcreate-community' ) . '</span>';
+		$m_price    = $wc ? '<span class="lcc-pcard-amt">' . self::price_html( $monthly ) . '</span> <span class="lcc-pcard-unit">' . esc_html__( '/ month', 'legendcreate-community' ) . '</span>' : '';
+		$a_price    = $wc ? '<span class="lcc-pcard-amt">' . self::price_html( $annual ) . '</span> <span class="lcc-pcard-unit">' . esc_html__( '/ year', 'legendcreate-community' ) . '</span>' : '';
 
 		ob_start();
-		echo '<div class="lcc-join-pricing">';
-		echo $card(
-			__( 'Free', 'legendcreate-community' ),
-			'<span class="lcc-price-free">' . esc_html__( '$0', 'legendcreate-community' ) . '</span>',
-			$free_features
-		);
-		echo $card(
-			__( 'Premium · Monthly', 'legendcreate-community' ),
-			( $wc ? self::price_html( $monthly ) . ' <small>' . esc_html__( '/mo', 'legendcreate-community' ) . '</small>' : '' ),
-			$premium_features, $m_btn, '', true
-		);
-		echo $card(
-			__( 'Premium · Annual', 'legendcreate-community' ),
-			( $wc ? self::price_html( $annual ) . ' <small>' . esc_html__( '/yr', 'legendcreate-community' ) . '</small>' : '' ),
-			$premium_features, $a_btn, __( 'Best value', 'legendcreate-community' ), true
-		);
-		echo '<p class="lcc-muted lcc-join-note">' . esc_html__( 'One-time payment, no auto-renewal. Choosing a plan creates your account, then takes you to secure checkout.', 'legendcreate-community' ) . '</p>';
+		echo '<div class="lcc-pcards">';
+		echo $card( __( 'Free', 'legendcreate-community' ), $free_price, __( 'Everything you need to start playing with your crew.', 'legendcreate-community' ), $free_cta, $free_features );
+		echo $card( __( 'Premium Monthly', 'legendcreate-community' ), $m_price, __( 'Unlock the full experience, month to month.', 'legendcreate-community' ), $m_cta, $premium_features );
+		echo $card( __( 'Premium Annual', 'legendcreate-community' ), $a_price, __( 'The full experience — best value, billed yearly.', 'legendcreate-community' ), $a_cta, $premium_features, true );
 		echo '</div>';
+		echo '<p class="lcc-muted lcc-join-note" style="text-align:center">' . esc_html__( 'One-time payment, no auto-renewal. Choosing a plan creates your account, then takes you to secure checkout.', 'legendcreate-community' ) . '</p>';
 		return ob_get_clean();
 	}
 

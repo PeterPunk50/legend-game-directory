@@ -63,9 +63,8 @@ final class LCC_Registration {
 				<h2><?php esc_html_e( 'Join LegendCreate', 'legendcreate-community' ); ?></h2>
 				<p class="lcc-muted"><?php esc_html_e( 'Bring your squad, keep playing the games you love, and earn community status.', 'legendcreate-community' ); ?></p>
 			</div>
-			<div class="lcc-join-grid">
-				<?php if ( class_exists( 'LCC_Premium' ) ) { echo LCC_Premium::pricing_summary(); } ?>
-				<div class="lcc-panel lcc-join-form" id="lcc-join-form">
+			<?php if ( class_exists( 'LCC_Premium' ) ) { echo LCC_Premium::pricing_summary(); } ?>
+			<div class="lcc-panel lcc-join-form" id="lcc-join-form">
 					<h3><?php esc_html_e( 'Create your free account', 'legendcreate-community' ); ?></h3>
 					<?php if ( $err && isset( self::ERRORS[ $err ] ) ) : ?>
 						<div class="lcc-notice lcc-notice-err"><?php echo esc_html( self::ERRORS[ $err ] ); ?></div>
@@ -103,7 +102,6 @@ final class LCC_Registration {
 				</form>
 					<p class="lcc-muted"><?php esc_html_e( 'Already a member?', 'legendcreate-community' ); ?> <a class="lcc-link" href="<?php echo esc_url( wp_login_url( home_url( '/dashboard/' ) ) ); ?>"><?php esc_html_e( 'Log in', 'legendcreate-community' ); ?></a></p>
 				</div>
-			</div>
 		</div>
 		<?php
 		return ob_get_clean();
