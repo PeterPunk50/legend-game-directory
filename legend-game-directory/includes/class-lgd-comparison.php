@@ -8,7 +8,7 @@ final class LGD_Comparison {
 	}
 
 	public function route() {
-		register_rest_route( 'lgd/v1', '/compare', array( 'methods' => 'GET', 'callback' => array( $this, 'rest_compare' ), 'permission_callback' => '__return_true', 'args' => array( 'games' => array( 'required' => true, 'sanitize_callback' => 'sanitize_text_field' ) ) ) );
+		register_rest_route( 'lgd/v1', '/compare', array( 'methods' => 'GET', 'callback' => array( $this, 'rest_compare' ), 'permission_callback' => 'is_user_logged_in', 'args' => array( 'games' => array( 'required' => true, 'sanitize_callback' => 'sanitize_text_field' ) ) ) );
 	}
 
 	public function rest_compare( WP_REST_Request $request ) {
@@ -40,6 +40,12 @@ final class LGD_Comparison {
 	}
 
 	public function shortcode( $atts ) {
+		if ( ! is_user_logged_in() ) {
+			return '<p class="lgd-missing">' . sprintf(
+				wp_kses( __( 'Please <a href="%s">log in or join</a> to compare games.', 'legend-game-directory' ), array( 'a' => array( 'href' => array() ) ) ),
+				esc_url( wp_login_url( get_permalink() ) )
+			) . '</p>';
+		}
 		$atts = shortcode_atts( array( 'games' => isset( $_GET['games'] ) ? sanitize_text_field( wp_unslash( $_GET['games'] ) ) : '' ), $atts );
 		$games = $this->data( $this->ids( $atts['games'] ) );
 		if ( count( $games ) < 2 ) { return '<p>' . esc_html__( 'Choose two to four published games to compare.', 'legend-game-directory' ) . '</p>'; }

@@ -39,9 +39,9 @@ if ( post_type_exists( 'game' ) )       { $add( 'Games', get_post_type_archive_l
 if ( post_type_exists( 'game_guide' ) ) { $add( 'Guides', get_post_type_archive_link( 'game_guide' ) ); }
 if ( post_type_exists( 'lc_squad' ) )   { $add( 'Squads', get_post_type_archive_link( 'lc_squad' ) ); }
 
-$prem = (int) get_option( 'lcc_page_premium', 0 );
-if ( $prem ) { $add( 'Premium', get_permalink( $prem ) ); }
-
+// "Join" (shown to logged-out visitors) also covers Premium; "My Account" (shown
+// to logged-in members) leads to the dashboard. LCC_Menu hides whichever does not
+// apply to the current visitor, so both are added here.
 $join = (int) get_option( 'lcc_page_register', 0 );
 if ( $join ) { $add( 'Join', get_permalink( $join ) ); }
 

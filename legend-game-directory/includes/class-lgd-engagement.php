@@ -14,7 +14,7 @@ final class LGD_Engagement {
 	}
 
 	public function routes() {
-		register_rest_route( 'lgd/v1', '/submit-game', array( 'methods' => 'POST', 'callback' => array( $this, 'submit_game' ), 'permission_callback' => '__return_true' ) );
+		register_rest_route( 'lgd/v1', '/submit-game', array( 'methods' => 'POST', 'callback' => array( $this, 'submit_game' ), 'permission_callback' => 'is_user_logged_in' ) );
 		register_rest_route( 'lgd/v1', '/alerts/subscribe', array( 'methods' => 'POST', 'callback' => array( $this, 'subscribe' ), 'permission_callback' => '__return_true' ) );
 		register_rest_route( 'lgd/v1', '/alerts/confirm', array( 'methods' => 'GET', 'callback' => array( $this, 'confirm' ), 'permission_callback' => '__return_true' ) );
 		register_rest_route( 'lgd/v1', '/alerts/unsubscribe', array( 'methods' => 'GET', 'callback' => array( $this, 'unsubscribe' ), 'permission_callback' => '__return_true' ) );
@@ -60,6 +60,12 @@ final class LGD_Engagement {
 	}
 
 	public function submit_shortcode() {
+		if ( ! is_user_logged_in() ) {
+			return '<p class="lgd-missing">' . sprintf(
+				wp_kses( __( 'Please <a href="%s">log in or join</a> to submit a game.', 'legend-game-directory' ), array( 'a' => array( 'href' => array() ) ) ),
+				esc_url( wp_login_url( get_permalink() ) )
+			) . '</p>';
+		}
 		ob_start(); ?>
 		<form class="lgd-submit-form lgd-ajax-form" data-endpoint="<?php echo esc_url( rest_url( 'lgd/v1/submit-game' ) ); ?>">
 			<input type="text" name="website" class="lgd-honeypot" tabindex="-1" autocomplete="off">
