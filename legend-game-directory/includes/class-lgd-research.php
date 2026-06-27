@@ -177,13 +177,13 @@ final class LGD_Research {
 			'reject_unsafe_urls'  => true,
 			'limit_response_size' => self::FETCH_LIMIT,
 			'headers'             => array(
-				'User-Agent' => 'LegendCreateResearchBot/1.0 (+https://legendcreate.com/gamingsite)',
+				'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36',
 				'Accept'     => 'text/html,application/xhtml+xml;q=0.9,*/*;q=0.8',
 			),
 		) );
 		if ( is_wp_error( $response ) ) {
 			LGD_Logger::log( 'research_fetch_error', 'Research fetch failed.', array( 'url' => $url, 'error' => $response->get_error_message() ), 'warning' );
-			$this->bail( $back, __( 'Could not fetch that source.', 'legend-game-directory' ) );
+			$this->bail( $back, sprintf( __( 'Could not fetch that source: %s', 'legend-game-directory' ), $response->get_error_message() ) );
 		}
 		$code = (int) wp_remote_retrieve_response_code( $response );
 		if ( $code < 200 || $code >= 300 ) {
