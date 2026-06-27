@@ -93,8 +93,8 @@ final class LCC_Premium {
 		$monthly = self::product_id( 'monthly' );
 		$annual  = self::product_id( 'annual' );
 		$wc      = function_exists( 'wc_get_checkout_url' );
-		$join    = (int) get_option( 'lcc_page_register', 0 );
-		$base    = $join ? get_permalink( $join ) : home_url( '/join/' );
+		$signup  = (int) get_option( 'lcc_page_signup', 0 );
+		$base    = $signup ? get_permalink( $signup ) : home_url( '/signup/' );
 
 		$free_features = array(
 			__( 'Gaming profile & favourite games', 'legendcreate-community' ),

@@ -21,7 +21,7 @@ final class LCC_Members {
 		if ( ! is_singular() ) { return; }
 		$post = get_post();
 		if ( ! $post ) { return; }
-		foreach ( array( 'lcc_dashboard', 'lcc_onboarding', 'lcc_register', 'lcc_login' ) as $sc ) {
+		foreach ( array( 'lcc_dashboard', 'lcc_onboarding', 'lcc_register', 'lcc_signup', 'lcc_login' ) as $sc ) {
 			if ( has_shortcode( $post->post_content, $sc ) ) {
 				wp_enqueue_style( 'lcc-community', LCC_URL . 'assets/css/community.css', array(), LCC_VERSION );
 				return;
