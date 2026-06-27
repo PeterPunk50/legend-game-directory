@@ -50,6 +50,52 @@ final class LGD_AI_Adapter {
 	}
 
 	/**
+	 * Extract ORIGINAL, paraphrased research notes from a fetched source page.
+	 * Never copies sentences; never invents facts. Separates facts from community
+	 * opinion and flags conflicts. Returns a structured array or WP_Error.
+	 */
+	public static function extract_evidence( $context ) {
+		$ready = self::preflight( 'text' );
+		if ( is_wp_error( $ready ) ) { return $ready; }
+
+		$context = is_array( $context ) ? $context : array();
+		$json    = wp_json_encode( $context, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE );
+		if ( strlen( $json ) > 120000 ) {
+			$context['text'] = mb_substr( (string) ( $context['text'] ?? '' ), 0, 50000 );
+			$json            = wp_json_encode( $context, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE );
+		}
+
+		$system = 'You extract STRUCTURED, ORIGINAL research notes from a supplied game source page for an editorial team. '
+			. 'NEVER copy or closely paraphrase sentences from the source — restate each point as a short, original factual note in your own words. '
+			. 'Do NOT invent facts, statistics, weapons, characters, maps, abilities, prices, or patch changes that are not present in the source. '
+			. 'Separate verified facts (stated by the source) from community opinion. Identify any conflicting or contradictory claims. '
+			. 'Return ONLY valid JSON with exactly these fields: '
+			. 'publisher (string), date_published (string or empty), season (string or empty), patch (string or empty), '
+			. 'facts (array of short original factual statements grounded in the source), '
+			. 'community_observations (array of short statements that are opinion/community advice rather than official fact), '
+			. 'conflicts (array of strings describing contradictions or disputed points), '
+			. 'claims_needing_verification (array of strings an editor should double-check). '
+			. 'If the source has little usable information, return empty arrays. Keep every item concise.';
+
+		$result = self::chat_request(
+			array(
+				array( 'role' => 'system', 'content' => $system ),
+				array( 'role' => 'user', 'content' => "Extract research notes from this source.\n" . $json ),
+			),
+			1800,
+			true
+		);
+		if ( is_wp_error( $result ) ) { return $result; }
+
+		self::record_usage( $result['usage']['input'], $result['usage']['output'], 'research' );
+		$data = json_decode( $result['text'], true );
+		if ( ! is_array( $data ) ) {
+			return new WP_Error( 'lgd_ai_research_malformed', __( 'AI research extraction returned malformed JSON.', 'legend-game-directory' ) );
+		}
+		return $data;
+	}
+
+	/**
 	 * Generate an original, evergreen game guide from a game-context bundle.
 	 * Returns a structured array (title, difficulty, reading_time, key_points, body_html, seo fields)
 	 * or WP_Error. Content is original advice — the model is instructed not to fabricate specifics.
