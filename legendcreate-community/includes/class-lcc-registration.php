@@ -55,13 +55,18 @@ final class LCC_Registration {
 
 		ob_start(); ?>
 		<div class="lcc-shell">
-			<div class="lcc-panel lcc-auth">
+			<div class="lcc-join-head">
 				<h2><?php esc_html_e( 'Join LegendCreate', 'legendcreate-community' ); ?></h2>
 				<p class="lcc-muted"><?php esc_html_e( 'Bring your squad, keep playing the games you love, and earn community status.', 'legendcreate-community' ); ?></p>
-				<?php if ( $err && isset( self::ERRORS[ $err ] ) ) : ?>
-					<div class="lcc-notice lcc-notice-err"><?php echo esc_html( self::ERRORS[ $err ] ); ?></div>
-				<?php endif; ?>
-				<form class="lcc-form" method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+			</div>
+			<div class="lcc-join-grid">
+				<?php if ( class_exists( 'LCC_Premium' ) ) { echo LCC_Premium::pricing_summary(); } ?>
+				<div class="lcc-panel lcc-join-form">
+					<h3><?php esc_html_e( 'Create your free account', 'legendcreate-community' ); ?></h3>
+					<?php if ( $err && isset( self::ERRORS[ $err ] ) ) : ?>
+						<div class="lcc-notice lcc-notice-err"><?php echo esc_html( self::ERRORS[ $err ] ); ?></div>
+					<?php endif; ?>
+					<form class="lcc-form" method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
 					<?php wp_nonce_field( 'lcc_register', 'lcc_register_nonce' ); ?>
 					<input type="hidden" name="action" value="lcc_register">
 					<div class="lcc-hp" aria-hidden="true"><label>Leave this empty<input type="text" name="lcc_hp" tabindex="-1" autocomplete="off"></label></div>
@@ -90,7 +95,8 @@ final class LCC_Registration {
 
 					<button type="submit" class="lcc-btn lcc-btn-lg"><?php esc_html_e( 'Create my free account', 'legendcreate-community' ); ?></button>
 				</form>
-				<p class="lcc-muted"><?php esc_html_e( 'Already a member?', 'legendcreate-community' ); ?> <a class="lcc-link" href="<?php echo esc_url( wp_login_url( home_url( '/dashboard/' ) ) ); ?>"><?php esc_html_e( 'Log in', 'legendcreate-community' ); ?></a></p>
+					<p class="lcc-muted"><?php esc_html_e( 'Already a member?', 'legendcreate-community' ); ?> <a class="lcc-link" href="<?php echo esc_url( wp_login_url( home_url( '/dashboard/' ) ) ); ?>"><?php esc_html_e( 'Log in', 'legendcreate-community' ); ?></a></p>
+				</div>
 			</div>
 		</div>
 		<?php

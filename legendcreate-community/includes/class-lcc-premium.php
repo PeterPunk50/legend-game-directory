@@ -84,6 +84,27 @@ final class LCC_Premium {
 		return ( '' === $price || null === $price ) ? esc_html__( 'Set price in WooCommerce', 'legendcreate-community' ) : wp_kses_post( wc_price( $price ) );
 	}
 
+	/**
+	 * Compact Free-vs-Premium pricing summary for the Join page (no buy buttons —
+	 * visitors create a free account first, then upgrade from the dashboard).
+	 */
+	public static function pricing_summary() {
+		$monthly = self::product_id( 'monthly' );
+		$annual  = self::product_id( 'annual' );
+		ob_start();
+		echo '<div class="lcc-join-pricing">';
+		echo '<div class="lcc-join-tier"><div class="lcc-join-tier-head"><strong>' . esc_html__( 'Legend Member', 'legendcreate-community' ) . '</strong><span class="lcc-join-price-free">' . esc_html__( 'Free', 'legendcreate-community' ) . '</span></div>';
+		echo '<p class="lcc-muted">' . esc_html__( 'Create a profile, join squads, rate games, vote in polls, earn points & badges, and invite your crew.', 'legendcreate-community' ) . '</p></div>';
+		echo '<div class="lcc-join-tier lcc-join-tier-premium"><div class="lcc-join-tier-head"><strong>' . esc_html__( 'Legend Premium', 'legendcreate-community' ) . '</strong>';
+		if ( function_exists( 'wc_get_product' ) && ( $monthly || $annual ) ) {
+			echo '<span class="lcc-join-price">' . self::price_html( $monthly ) . ' <small>' . esc_html__( '/mo', 'legendcreate-community' ) . '</small> · ' . self::price_html( $annual ) . ' <small>' . esc_html__( '/yr', 'legendcreate-community' ) . '</small></span>';
+		}
+		echo '</div><p class="lcc-muted">' . esc_html__( 'Everything free, plus premium guides, early access, priority testing, advanced squad tools, and an ad-reduced experience.', 'legendcreate-community' ) . '</p>';
+		echo '<p class="lcc-muted lcc-join-note">' . esc_html__( 'Upgrade anytime after you join — one-time payment, no auto-renewal.', 'legendcreate-community' ) . '</p></div>';
+		echo '</div>';
+		return ob_get_clean();
+	}
+
 	// ── Shortcodes ───────────────────────────────────────────────────────────────
 
 	public function premium_shortcode() {

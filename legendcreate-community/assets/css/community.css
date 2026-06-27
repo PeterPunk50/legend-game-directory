@@ -113,4 +113,20 @@
 .lcc-premium-gate{background:rgba(168,117,255,.08);border:1px dashed rgba(168,117,255,.4);border-radius:14px;padding:22px;text-align:center}
 .lcc-premium-gate strong{display:block;color:var(--lcc-purple);text-transform:uppercase;letter-spacing:.06em;font-size:.78rem;margin-bottom:8px}
 @media(max-width:700px){.lcc-plan-grid{grid-template-columns:1fr}}
+/* Join page (pricing + form) */
+.lcc-join-head{text-align:center;margin-bottom:20px}
+.lcc-join-head h2{color:var(--lcc-text);margin:0 0 .3em}
+.lcc-join-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start}
+.lcc-join-form{margin:0}
+.lcc-join-form h3{margin-top:0}
+.lcc-join-pricing{display:grid;gap:14px}
+.lcc-join-tier{background:var(--lcc-panel);border:1px solid var(--lcc-border);border-radius:14px;padding:18px}
+.lcc-join-tier-premium{border-color:var(--lcc-cyan);box-shadow:0 0 0 1px var(--lcc-cyan) inset}
+.lcc-join-tier-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+.lcc-join-tier-head strong{font-size:1.1rem;color:var(--lcc-text)}
+.lcc-join-price-free{font-weight:900;color:var(--lcc-green)}
+.lcc-join-price{font-weight:900;color:var(--lcc-cyan)}
+.lcc-join-price small{color:var(--lcc-muted);font-weight:600}
+.lcc-join-note{font-size:.8rem;margin-bottom:0}
+@media(max-width:760px){.lcc-join-grid{grid-template-columns:1fr}}
 @media(max-width:700px){.lcc-grid{grid-template-columns:1fr}.lcc-squad-grid{grid-template-columns:1fr}}
