@@ -1,5 +1,5 @@
 /* LegendCreate Community — member UI */
-.lcc-shell{--lcc-bg:#07111f;--lcc-panel:#101c2d;--lcc-panel2:#16263c;--lcc-text:#f6f8fc;--lcc-muted:#a9b7ca;--lcc-cyan:#31d7ff;--lcc-purple:#a875ff;--lcc-green:#4ee5a8;--lcc-border:rgba(255,255,255,.12);color:var(--lcc-text);background:var(--lcc-bg);padding:clamp(20px,3vw,48px);border-radius:16px;box-sizing:border-box;width:100%;max-width:1640px;margin:16px auto}
+.lcc-shell{--lcc-bg:#07111f;--lcc-panel:#101c2d;--lcc-panel2:#16263c;--lcc-text:#f6f8fc;--lcc-muted:#a9b7ca;--lcc-cyan:#31d7ff;--lcc-purple:#a875ff;--lcc-green:#4ee5a8;--lcc-border:rgba(255,255,255,.12);color:var(--lcc-text);background:var(--lcc-bg);padding:clamp(20px,3vw,52px);border-radius:16px;box-sizing:border-box;width:100%;max-width:1800px;margin:16px auto}
 /* Widen BizDirectory's content container on membership pages (this CSS only loads here).
    The constraining wrapper is #content.page-section > .container (ancestor of .site-main). */
 #content,#content .container,.page-section .container,.site-main,.entry-content,.entry-content .container{max-width:none!important;width:auto!important}
@@ -119,28 +119,29 @@
 .lcc-premium-gate strong{display:block;color:var(--lcc-purple);text-transform:uppercase;letter-spacing:.06em;font-size:.78rem;margin-bottom:8px}
 @media(max-width:700px){.lcc-plan-grid{grid-template-columns:1fr}}
 /* Join page — SaaS-style pricing cards + centered form */
-.lcc-join-head{text-align:center;margin-bottom:24px}
-.lcc-join-head h2{color:var(--lcc-text);margin:0 0 .3em}
+.lcc-join-head{text-align:center;margin-bottom:30px}
+.lcc-join-head h2{color:var(--lcc-text);margin:0 0 .3em;font-size:clamp(2.4rem,4.2vw,3.4rem)}
+.lcc-join-head p{font-size:1.25rem}
 .lcc-join-form{max-width:560px;margin:28px auto 0}
 .lcc-join-form h3{margin-top:0}
 .lcc-btn-block{display:block;width:100%;text-align:center;box-sizing:border-box}
 /* Anchor buttons inside .lcc-shell: keep dark readable label (override the link-color rule) */
 .lcc-shell a.lcc-btn{color:#07111f;text-decoration:none}
 .lcc-shell a.lcc-btn-ghost{color:var(--lcc-text)}
-.lcc-pcards{display:grid;grid-template-columns:repeat(3,1fr);gap:32px;align-items:stretch;max-width:1560px;margin:0 auto}
-.lcc-pcard{position:relative;display:flex;flex-direction:column;background:var(--lcc-panel);border:1px solid var(--lcc-border);border-radius:22px;padding:52px 44px}
+.lcc-pcards{display:grid;grid-template-columns:repeat(3,1fr);gap:36px;align-items:stretch;max-width:1720px;margin:0 auto}
+.lcc-pcard{position:relative;display:flex;flex-direction:column;background:var(--lcc-panel);border:1px solid var(--lcc-border);border-radius:24px;padding:60px 50px}
 .lcc-pcard-rec{border-color:var(--lcc-cyan);background:linear-gradient(180deg,rgba(49,215,255,.07),var(--lcc-panel))}
-.lcc-pcard-badge{position:absolute;top:26px;right:26px;font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em;padding:6px 14px;border-radius:999px;background:linear-gradient(135deg,var(--lcc-cyan),var(--lcc-purple));color:#07111f}
-.lcc-pcard-name{margin:0 0 18px;font-size:2.4rem;color:var(--lcc-text)}
-.lcc-pcard-price{display:flex;align-items:baseline;gap:12px;margin-bottom:12px}
-.lcc-pcard-amt{font-size:4.4rem;font-weight:900;color:var(--lcc-text);line-height:1}
+.lcc-pcard-badge{position:absolute;top:30px;right:30px;font-size:.8rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em;padding:7px 16px;border-radius:999px;background:linear-gradient(135deg,var(--lcc-cyan),var(--lcc-purple));color:#07111f}
+.lcc-pcard-name{margin:0 0 20px;font-size:2.8rem;color:var(--lcc-text)}
+.lcc-pcard-price{display:flex;align-items:baseline;gap:12px;margin-bottom:14px}
+.lcc-pcard-amt{font-size:5.2rem;font-weight:900;color:var(--lcc-text);line-height:1}
 .lcc-pcard-amt .woocommerce-Price-amount{font-size:inherit}
-.lcc-pcard-unit{color:var(--lcc-muted);font-size:1.1rem}
-.lcc-pcard-desc{color:var(--lcc-muted);margin:0 0 28px;min-height:3em;font-size:1.18rem}
-.lcc-pcard .lcc-btn{margin-bottom:30px;padding:18px 20px;font-size:1.15rem}
+.lcc-pcard-unit{color:var(--lcc-muted);font-size:1.2rem}
+.lcc-pcard-desc{color:var(--lcc-muted);margin:0 0 32px;min-height:3em;font-size:1.32rem}
+.lcc-pcard .lcc-btn{margin-bottom:34px;padding:20px 22px;font-size:1.3rem}
 .lcc-pcard-list{list-style:none;margin:0;padding:0}
-.lcc-pcard-list li{padding:12px 0 12px 34px;position:relative;color:var(--lcc-text);font-size:1.15rem}
-.lcc-pcard-list li::before{content:"\2713";position:absolute;left:0;color:var(--lcc-green);font-weight:900;font-size:1.2rem}
+.lcc-pcard-list li{padding:14px 0 14px 38px;position:relative;color:var(--lcc-text);font-size:1.35rem}
+.lcc-pcard-list li::before{content:"\2713";position:absolute;left:0;color:var(--lcc-green);font-weight:900;font-size:1.5rem}
 .lcc-join-note{font-size:.85rem;margin:18px 0 0}
 @media(max-width:860px){.lcc-pcards{grid-template-columns:1fr}}
 @media(max-width:700px){.lcc-grid{grid-template-columns:1fr}.lcc-squad-grid{grid-template-columns:1fr}}
