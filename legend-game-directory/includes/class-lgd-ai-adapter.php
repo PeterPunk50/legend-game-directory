@@ -195,6 +195,54 @@ final class LGD_AI_Adapter {
 		return $data;
 	}
 
+	/**
+	 * Arrange supplied raw notes + image URLs into a clean, original guide layout.
+	 * Returns array( html ) or WP_Error. Uses only the provided images (exact URLs),
+	 * organizes notes into sensible sections, and never invents facts or images.
+	 */
+	public static function compose_layout( $text, $images ) {
+		$ready = self::preflight( 'text' );
+		if ( is_wp_error( $ready ) ) { return $ready; }
+
+		$text   = trim( (string) $text );
+		$images = array_values( array_filter( array_map( 'trim', (array) $images ) ) );
+		if ( '' === $text && empty( $images ) ) {
+			return new WP_Error( 'lgd_compose_empty', __( 'Add some text or images to arrange.', 'legend-game-directory' ) );
+		}
+		if ( strlen( $text ) > 24000 ) { $text = substr( $text, 0, 24000 ); }
+		$img_json = wp_json_encode( array_slice( $images, 0, 12 ), JSON_UNESCAPED_SLASHES );
+
+		$system = 'You arrange supplied raw notes and images into a clean, ORIGINAL game-guide layout in semantic HTML. '
+			. 'Use ONLY these tags: h2, h3, p, ul, ol, li, strong, em, figure, img, figcaption. '
+			. 'Organize the notes into sensible guide sections (for example: Quick Answer, What You Need to Know, '
+			. 'Recommended Setup, Step-by-Step, Common Mistakes, FAQ) but ONLY where the notes support them — '
+			. 'do not invent facts, stats, weapons, characters, maps, or content that is not in the notes. '
+			. 'Improve wording lightly for readability but keep the meaning; do not copy long passages verbatim. '
+			. 'Place each supplied image inside <figure><img src="EXACT_URL" alt="..."><figcaption>...</figcaption></figure> '
+			. 'at a relevant point, using EXACTLY the image URLs provided (never invent, alter, or drop the host) and in a '
+			. 'sensible order. Do not present images as official in-game screenshots unless the notes say so. '
+			. 'No inline styles, no links, no h1. Return ONLY valid JSON: { "html": "<the laid-out guide HTML>" }.';
+
+		$user = "NOTES:\n" . $text . "\n\nIMAGE URLS (place each as a <figure>):\n" . $img_json;
+
+		$result = self::chat_request(
+			array(
+				array( 'role' => 'system', 'content' => $system ),
+				array( 'role' => 'user', 'content' => $user ),
+			),
+			3200,
+			true
+		);
+		if ( is_wp_error( $result ) ) { return $result; }
+
+		self::record_usage( $result['usage']['input'], $result['usage']['output'], 'compose' );
+		$data = json_decode( $result['text'], true );
+		if ( ! is_array( $data ) || empty( $data['html'] ) ) {
+			return new WP_Error( 'lgd_compose_malformed', __( 'AI layout output was malformed.', 'legend-game-directory' ) );
+		}
+		return $data;
+	}
+
 	public static function research_candidates( $query ) {
 		$settings = LGD_Security::settings();
 		if ( empty( $settings['enable_ai_web_search'] ) ) {
