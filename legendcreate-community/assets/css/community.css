@@ -120,15 +120,18 @@
 .lcc-join-form{margin:0}
 .lcc-join-form h3{margin-top:0}
 .lcc-join-pricing{display:grid;gap:14px}
-.lcc-join-tier{background:var(--lcc-panel);border:1px solid var(--lcc-border);border-radius:14px;padding:18px}
-.lcc-join-tier-premium{border-color:var(--lcc-cyan);box-shadow:0 0 0 1px var(--lcc-cyan) inset}
-.lcc-join-tier-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
-.lcc-join-tier-head strong{font-size:1.1rem;color:var(--lcc-text)}
-.lcc-join-price-free{font-weight:900;color:var(--lcc-green)}
-.lcc-join-price{font-weight:900;color:var(--lcc-cyan)}
-.lcc-join-price small{color:var(--lcc-muted);font-weight:600}
+.lcc-tier{background:var(--lcc-panel);border:1px solid var(--lcc-border);border-radius:14px;padding:18px}
+.lcc-tier-premium{border-color:var(--lcc-cyan);box-shadow:0 0 0 1px var(--lcc-cyan) inset}
+.lcc-tier-top{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.lcc-tier-top strong{font-size:1.1rem;color:var(--lcc-text)}
+.lcc-tier-tag{display:inline-block;font-size:.62rem;font-weight:800;text-transform:uppercase;letter-spacing:.05em;padding:3px 8px;border-radius:999px;background:linear-gradient(135deg,var(--lcc-cyan),var(--lcc-purple));color:#07111f;vertical-align:middle}
+.lcc-tier-price{font-weight:900;color:var(--lcc-cyan);white-space:nowrap}
+.lcc-tier-price small{color:var(--lcc-muted);font-weight:600}
+.lcc-price-free{font-weight:900;color:var(--lcc-green)}
+.lcc-tier-list{list-style:none;margin:0 0 12px;padding:0}
+.lcc-tier-list li{padding:5px 0 5px 22px;position:relative;color:var(--lcc-text);font-size:.9rem}
+.lcc-tier-list li::before{content:"\2713";position:absolute;left:0;color:var(--lcc-green);font-weight:900}
+.lcc-tier .lcc-btn{display:block;text-align:center}
 .lcc-join-note{font-size:.8rem;margin-bottom:0}
-.lcc-join-buy{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0 4px}
-.lcc-join-buy .lcc-btn{flex:1;text-align:center}
 @media(max-width:760px){.lcc-join-grid{grid-template-columns:1fr}}
 @media(max-width:700px){.lcc-grid{grid-template-columns:1fr}.lcc-squad-grid{grid-template-columns:1fr}}

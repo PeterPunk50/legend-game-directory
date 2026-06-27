@@ -85,32 +85,67 @@ final class LCC_Premium {
 	}
 
 	/**
-	 * Compact Free-vs-Premium pricing summary for the Join page (no buy buttons —
-	 * visitors create a free account first, then upgrade from the dashboard).
+	 * Three-tier pricing for the Join page: Free, Premium Monthly, Premium Annual —
+	 * each with its own feature list and price. Premium tiers carry a buy button
+	 * that routes through signup to checkout.
 	 */
 	public static function pricing_summary() {
 		$monthly = self::product_id( 'monthly' );
 		$annual  = self::product_id( 'annual' );
+		$wc      = function_exists( 'wc_get_checkout_url' );
+		$join    = (int) get_option( 'lcc_page_register', 0 );
+		$base    = $join ? get_permalink( $join ) : home_url( '/join/' );
+
+		$free_features = array(
+			__( 'Gaming profile & favourite games', 'legendcreate-community' ),
+			__( 'Create or join squads', 'legendcreate-community' ),
+			__( 'Submit ratings & opinions', 'legendcreate-community' ),
+			__( 'Vote in community polls', 'legendcreate-community' ),
+			__( 'Earn points & badges', 'legendcreate-community' ),
+			__( 'Invite your squad (referrals)', 'legendcreate-community' ),
+		);
+		$premium_features = array(
+			__( 'Everything in Free', 'legendcreate-community' ),
+			__( 'Full premium guides & strategy breakdowns', 'legendcreate-community' ),
+			__( 'Early access to new guides', 'legendcreate-community' ),
+			__( 'Priority & exclusive game testing', 'legendcreate-community' ),
+			__( 'Ad-reduced experience & advanced filters', 'legendcreate-community' ),
+			__( 'Advanced squad tools & saved lists', 'legendcreate-community' ),
+			__( 'Monthly premium recommendations', 'legendcreate-community' ),
+		);
+
+		$card = function ( $title, $price_html, $features, $button = '', $tag = '', $premium = false ) {
+			$h  = '<div class="lcc-tier' . ( $premium ? ' lcc-tier-premium' : '' ) . '">';
+			$h .= '<div class="lcc-tier-top"><strong>' . esc_html( $title ) . ( $tag ? ' <span class="lcc-tier-tag">' . esc_html( $tag ) . '</span>' : '' ) . '</strong>';
+			$h .= '<span class="lcc-tier-price">' . $price_html . '</span></div>';
+			$h .= '<ul class="lcc-tier-list">';
+			foreach ( $features as $f ) { $h .= '<li>' . esc_html( $f ) . '</li>'; }
+			$h .= '</ul>';
+			if ( $button ) { $h .= $button; }
+			return $h . '</div>';
+		};
+
+		$m_btn = ( $wc && $monthly ) ? '<a class="lcc-btn lcc-btn-ghost" href="' . esc_url( add_query_arg( 'buy', 'monthly', $base ) ) . '#lcc-join-form">' . esc_html__( 'Get Monthly', 'legendcreate-community' ) . '</a>' : '';
+		$a_btn = ( $wc && $annual ) ? '<a class="lcc-btn" href="' . esc_url( add_query_arg( 'buy', 'annual', $base ) ) . '#lcc-join-form">' . esc_html__( 'Get Annual', 'legendcreate-community' ) . '</a>' : '';
+
 		ob_start();
 		echo '<div class="lcc-join-pricing">';
-		echo '<div class="lcc-join-tier"><div class="lcc-join-tier-head"><strong>' . esc_html__( 'Legend Member', 'legendcreate-community' ) . '</strong><span class="lcc-join-price-free">' . esc_html__( 'Free', 'legendcreate-community' ) . '</span></div>';
-		echo '<p class="lcc-muted">' . esc_html__( 'Create a profile, join squads, rate games, vote in polls, earn points & badges, and invite your crew.', 'legendcreate-community' ) . '</p></div>';
-		echo '<div class="lcc-join-tier lcc-join-tier-premium"><div class="lcc-join-tier-head"><strong>' . esc_html__( 'Legend Premium', 'legendcreate-community' ) . '</strong>';
-		if ( function_exists( 'wc_get_product' ) && ( $monthly || $annual ) ) {
-			echo '<span class="lcc-join-price">' . self::price_html( $monthly ) . ' <small>' . esc_html__( '/mo', 'legendcreate-community' ) . '</small> · ' . self::price_html( $annual ) . ' <small>' . esc_html__( '/yr', 'legendcreate-community' ) . '</small></span>';
-		}
-		echo '</div><p class="lcc-muted">' . esc_html__( 'Everything free, plus premium guides, early access, priority testing, advanced squad tools, and an ad-reduced experience.', 'legendcreate-community' ) . '</p>';
-
-		if ( function_exists( 'wc_get_checkout_url' ) && ( $monthly || $annual ) ) {
-			$join = (int) get_option( 'lcc_page_register', 0 );
-			$base = $join ? get_permalink( $join ) : home_url( '/join/' );
-			echo '<div class="lcc-join-buy">';
-			if ( $monthly ) { echo '<a class="lcc-btn lcc-btn-ghost" href="' . esc_url( add_query_arg( 'buy', 'monthly', $base ) ) . '#lcc-join-form">' . esc_html__( 'Get Monthly', 'legendcreate-community' ) . '</a>'; }
-			if ( $annual ) { echo '<a class="lcc-btn" href="' . esc_url( add_query_arg( 'buy', 'annual', $base ) ) . '#lcc-join-form">' . esc_html__( 'Get Annual', 'legendcreate-community' ) . '</a>'; }
-			echo '</div>';
-		}
-
-		echo '<p class="lcc-muted lcc-join-note">' . esc_html__( 'One-time payment, no auto-renewal. Choosing a plan creates your account, then takes you to secure checkout.', 'legendcreate-community' ) . '</p></div>';
+		echo $card(
+			__( 'Free', 'legendcreate-community' ),
+			'<span class="lcc-price-free">' . esc_html__( '$0', 'legendcreate-community' ) . '</span>',
+			$free_features
+		);
+		echo $card(
+			__( 'Premium · Monthly', 'legendcreate-community' ),
+			( $wc ? self::price_html( $monthly ) . ' <small>' . esc_html__( '/mo', 'legendcreate-community' ) . '</small>' : '' ),
+			$premium_features, $m_btn, '', true
+		);
+		echo $card(
+			__( 'Premium · Annual', 'legendcreate-community' ),
+			( $wc ? self::price_html( $annual ) . ' <small>' . esc_html__( '/yr', 'legendcreate-community' ) . '</small>' : '' ),
+			$premium_features, $a_btn, __( 'Best value', 'legendcreate-community' ), true
+		);
+		echo '<p class="lcc-muted lcc-join-note">' . esc_html__( 'One-time payment, no auto-renewal. Choosing a plan creates your account, then takes you to secure checkout.', 'legendcreate-community' ) . '</p>';
 		echo '</div>';
 		return ob_get_clean();
 	}
