@@ -1,5 +1,12 @@
 /* Legend Game Directory — Guide styles */
 
+/* ── Indexed/external guide bits ── */
+.lgd-guide-card__image--video{position:relative}
+.lgd-guide-card__play{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:2.4rem;color:#fff;text-shadow:0 2px 10px rgba(0,0,0,.6);background:rgba(7,17,31,.28)}
+.lgd-guide-video{margin:14px 0}
+.lgd-guide-source{margin:18px 0;padding:18px;background:var(--lgd-panel);border:1px solid var(--lgd-border);border-radius:12px}
+.lgd-guide-source .lgd-guide-cta__disclosure{margin:.6em 0 0;font-size:.82rem;color:var(--lgd-muted)}
+
 /* ── Filter tabs ── */
 .lgd-filter-tabs{display:flex;flex-wrap:wrap;gap:8px;margin-top:24px}
 .lgd-filter-tab{padding:9px 16px;border-radius:999px;border:1px solid var(--lgd-border);text-decoration:none;color:var(--lgd-muted);font-size:.88rem;transition:border-color .18s,color .18s}

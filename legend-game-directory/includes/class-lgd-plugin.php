@@ -37,6 +37,7 @@ final class LGD_Plugin {
 				'includes/class-lgd-content-cleanup.php',
 				'includes/class-lgd-research.php',
 				'includes/class-lgd-guide-composer.php',
+				'includes/class-lgd-guide-indexer.php',
 		);
 	}
 
@@ -64,6 +65,7 @@ final class LGD_Plugin {
 		new LGD_Content_Cleanup();
 		new LGD_Research();
 		new LGD_Guide_Composer();
+		new LGD_Guide_Indexer();
 		add_action( 'admin_init', array( 'LGD_Database', 'maybe_upgrade' ) );
 		add_action( 'init', array( 'LGD_AI_Adapter', 'ensure_provider_credentials' ), 6 );
 	}

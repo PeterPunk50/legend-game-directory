@@ -243,6 +243,42 @@ final class LGD_AI_Adapter {
 		return $data;
 	}
 
+	/**
+	 * Write a SHORT original summary (40-120 words) of an external guide for a
+	 * directory listing, from supplied metadata only. No source-sentence copying.
+	 * Returns array( summary ) or WP_Error.
+	 */
+	public static function index_summary( $meta ) {
+		$ready = self::preflight( 'text' );
+		if ( is_wp_error( $ready ) ) { return $ready; }
+
+		$meta = is_array( $meta ) ? $meta : array();
+		$json = wp_json_encode( $meta, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE );
+
+		$system = 'You write a SHORT, ORIGINAL summary (40-120 words) of an external game guide for a directory listing, '
+			. 'using ONLY the supplied metadata (title, description, game, guide type). Do NOT copy or closely paraphrase '
+			. 'source sentences. State the guide\'s core value, name the related game, and note whether it is beginner, '
+			. 'ranked, settings, loadout, etc. Neutral and original; do not invent specifics not implied by the metadata. '
+			. 'Return ONLY valid JSON: { "summary": "..." }.';
+
+		$result = self::chat_request(
+			array(
+				array( 'role' => 'system', 'content' => $system ),
+				array( 'role' => 'user', 'content' => "Guide metadata:\n" . $json ),
+			),
+			400,
+			true
+		);
+		if ( is_wp_error( $result ) ) { return $result; }
+
+		self::record_usage( $result['usage']['input'], $result['usage']['output'], 'index_summary' );
+		$data = json_decode( $result['text'], true );
+		if ( ! is_array( $data ) || empty( $data['summary'] ) ) {
+			return new WP_Error( 'lgd_ai_index_malformed', __( 'AI summary output was malformed.', 'legend-game-directory' ) );
+		}
+		return $data;
+	}
+
 	public static function research_candidates( $query ) {
 		$settings = LGD_Security::settings();
 		if ( empty( $settings['enable_ai_web_search'] ) ) {

@@ -58,6 +58,16 @@ final class LGD_Guide_Post_Types {
 			'_lgd_guide_ai_generated'     => 'boolean',
 			'_lgd_guide_ai_generated_at'  => 'string',
 			'_lgd_guide_last_updated'     => 'string',
+			// Indexed/external guide fields (aggregator mode).
+			'_lgd_guide_is_external'      => 'boolean',
+			'_lgd_guide_source_url'       => 'string',
+			'_lgd_guide_source_site'      => 'string',
+			'_lgd_guide_source_author'    => 'string',
+			'_lgd_guide_source_date'      => 'string',
+			'_lgd_guide_video_url'        => 'string',
+			'_lgd_guide_image_from_video' => 'boolean',
+			'_lgd_guide_score'            => 'integer',
+			'_lgd_guide_imported_at'      => 'string',
 		);
 	}
 

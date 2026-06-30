@@ -15,6 +15,11 @@ $key_points = array_filter( (array) get_post_meta( $guide_id, '_lgd_guide_key_po
 $guide_types = wp_get_post_terms( $guide_id, 'guide_type', array( 'fields' => 'names' ) );
 $seo_title  = get_post_meta( $guide_id, '_lgd_guide_seo_title', true );
 $meta_desc  = get_post_meta( $guide_id, '_lgd_guide_meta_description', true );
+$is_external   = (bool) get_post_meta( $guide_id, '_lgd_guide_is_external', true );
+$source_url    = get_post_meta( $guide_id, '_lgd_guide_source_url', true );
+$source_site   = get_post_meta( $guide_id, '_lgd_guide_source_site', true );
+$source_author = get_post_meta( $guide_id, '_lgd_guide_source_author', true );
+$video_url     = get_post_meta( $guide_id, '_lgd_guide_video_url', true );
 
 // Related guides (same game or same type — limit 3).
 $related_args = array(
@@ -87,6 +92,22 @@ $related = new WP_Query( $related_args );
 			<div class="lgd-guide-body">
 				<?php the_content(); ?>
 			</div>
+
+			<?php if ( $video_url ) : ?>
+			<div class="lgd-guide-video">
+				<a class="lgd-button" rel="noopener" target="_blank" href="<?php echo esc_url( $video_url ); ?>">&#9654; <?php esc_html_e( 'Watch video guide', 'legend-game-directory' ); ?></a>
+			</div>
+			<?php endif; ?>
+
+			<?php if ( $is_external && $source_url ) : ?>
+			<div class="lgd-guide-source">
+				<a class="lgd-button lgd-button--cta" rel="nofollow noopener" target="_blank" href="<?php echo esc_url( $source_url ); ?>"><?php esc_html_e( 'Read Full Guide', 'legend-game-directory' ); ?> &rarr;</a>
+				<p class="lgd-guide-cta__disclosure">
+					<?php echo esc_html( sprintf( __( 'Summary by Legend Create. The full guide is on %s — credit to the original source.', 'legend-game-directory' ), $source_site ? $source_site : wp_parse_url( $source_url, PHP_URL_HOST ) ) ); ?>
+					<?php if ( $source_author ) { echo ' ' . esc_html( sprintf( __( 'By %s.', 'legend-game-directory' ), $source_author ) ); } ?>
+				</p>
+			</div>
+			<?php endif; ?>
 
 			<!-- AD SLOT: guide-mid -->
 			<div class="lgd-ad-slot lgd-ad-slot--guide-mid" aria-hidden="true">

@@ -34,11 +34,15 @@ $archive_url = get_post_type_archive_link( 'game_guide' );
 				$diff      = get_post_meta( $guide_id, '_lgd_guide_difficulty', true );
 				$read_time = (int) get_post_meta( $guide_id, '_lgd_guide_reading_time', true );
 				$types     = wp_get_post_terms( $guide_id, 'guide_type', array( 'fields' => 'names' ) );
+				$src_site  = get_post_meta( $guide_id, '_lgd_guide_source_site', true );
+				$is_video  = (bool) get_post_meta( $guide_id, '_lgd_guide_video_url', true );
+				$remote    = get_post_meta( $guide_id, '_lgd_guide_remote_image', true );
 			?>
 			<article class="lgd-guide-card">
-				<?php if ( has_post_thumbnail() ) : ?>
-					<a class="lgd-guide-card__image" href="<?php the_permalink(); ?>" tabindex="-1" aria-hidden="true">
-						<?php the_post_thumbnail( 'lgd-card', array( 'loading' => 'lazy' ) ); ?>
+				<?php if ( has_post_thumbnail() || $remote ) : ?>
+					<a class="lgd-guide-card__image<?php echo $is_video ? ' lgd-guide-card__image--video' : ''; ?>" href="<?php the_permalink(); ?>" tabindex="-1" aria-hidden="true">
+						<?php if ( has_post_thumbnail() ) { the_post_thumbnail( 'lgd-card', array( 'loading' => 'lazy' ) ); } else { echo '<img src="' . esc_url( $remote ) . '" alt="" loading="lazy" width="720" height="405">'; } ?>
+						<?php if ( $is_video ) : ?><span class="lgd-guide-card__play" aria-hidden="true">&#9654;</span><?php endif; ?>
 					</a>
 				<?php endif; ?>
 				<div class="lgd-guide-card__body">
