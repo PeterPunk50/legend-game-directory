@@ -26,7 +26,7 @@ final class LGD_Guide_Post_Types {
 			'rewrite'           => array( 'slug' => 'guides', 'with_front' => false ),
 			'menu_icon'         => 'dashicons-book-alt',
 			'menu_position'     => 6,
-			'supports'          => array( 'title', 'editor', 'excerpt', 'thumbnail', 'author', 'revisions', 'custom-fields' ),
+			'supports'          => array( 'title', 'editor', 'excerpt', 'thumbnail', 'author', 'revisions', 'custom-fields', 'comments' ),
 			'map_meta_cap'      => true,
 			'capability_type'   => array( 'guide', 'guides' ),
 			'show_in_nav_menus' => true,

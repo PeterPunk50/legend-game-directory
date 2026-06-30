@@ -152,6 +152,10 @@ $grade  = get_post_meta( $id, '_lgd_monetization_grade', true ) ?: 'Pending';
 
 		<section class="lgd-section lgd-panel"><h2><?php esc_html_e( 'Report Incorrect Information', 'legend-game-directory' ); ?></h2><?php echo do_shortcode( '[lgd_report_game game_id="' . $id . '"]' ); ?></section>
 
+		<?php if ( comments_open() || get_comments_number() ) : ?>
+		<section class="lgd-section lgd-comments"><?php comments_template(); ?></section>
+		<?php endif; ?>
+
 	</div>
 </main>
 <?php get_footer(); ?>

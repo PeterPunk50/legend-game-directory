@@ -156,6 +156,38 @@ final class LGD_Engagement {
 		return rest_ensure_response( array( 'subscribed' => true, 'message' => __( 'Almost done — check your inbox to confirm your game alerts.', 'legend-game-directory' ) ) );
 	}
 
+	/**
+	 * Subscribe a verified account email directly as confirmed — no double opt-in,
+	 * since a logged-in member's email is already verified. For cross-plugin callers
+	 * (the membership signup/profile alert toggle). Returns subscriber id or 0.
+	 */
+	public static function add_confirmed_subscriber( $email, $prefs = array() ) {
+		global $wpdb;
+		$email = sanitize_email( $email );
+		if ( ! is_email( $email ) ) { return 0; }
+		$prefs = array_values( array_intersect( array( 'free', 'highly_rated', 'temporary_free' ), array_map( 'sanitize_key', (array) $prefs ) ) );
+		if ( empty( $prefs ) ) { $prefs = array( 'free', 'highly_rated' ); }
+		$table = LGD_Database::table( 'subscribers' );
+		$now   = current_time( 'mysql', true );
+		$existing = $wpdb->get_row( $wpdb->prepare( "SELECT id FROM {$table} WHERE email=%s", $email ), ARRAY_A );
+		if ( $existing ) {
+			$wpdb->update( $table, array( 'status' => 'confirmed', 'preferences' => implode( ',', $prefs ), 'confirmed_at' => $now ), array( 'id' => $existing['id'] ), array( '%s', '%s', '%s' ), array( '%d' ) );
+			return (int) $existing['id'];
+		}
+		$token = wp_generate_password( 32, false, false );
+		$wpdb->insert( $table, array( 'email' => $email, 'token_hash' => wp_hash_password( $token ), 'status' => 'confirmed', 'preferences' => implode( ',', $prefs ), 'created_at' => $now, 'confirmed_at' => $now ), array( '%s', '%s', '%s', '%s', '%s', '%s' ) );
+		return (int) $wpdb->insert_id;
+	}
+
+	/** Opt a member email out of game alerts (from the profile toggle). */
+	public static function remove_subscriber( $email ) {
+		global $wpdb;
+		$email = sanitize_email( $email );
+		if ( ! is_email( $email ) ) { return; }
+		$table = LGD_Database::table( 'subscribers' );
+		$wpdb->update( $table, array( 'status' => 'unsubscribed' ), array( 'email' => $email ), array( '%s' ), array( '%s' ) );
+	}
+
 	public function confirm( WP_REST_Request $request ) {
 		global $wpdb;
 		$id = absint( $request['id'] ); $table = LGD_Database::table( 'subscribers' );

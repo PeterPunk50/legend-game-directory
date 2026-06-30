@@ -12,7 +12,7 @@ final class LGD_Post_Types {
 			'labels' => array( 'name' => __( 'Games', 'legend-game-directory' ), 'singular_name' => __( 'Game', 'legend-game-directory' ), 'add_new_item' => __( 'Add Game', 'legend-game-directory' ), 'edit_item' => __( 'Edit Game', 'legend-game-directory' ) ),
 			'public' => true, 'show_in_rest' => true, 'has_archive' => 'games',
 			'rewrite' => array( 'slug' => 'games', 'with_front' => false ), 'menu_icon' => 'dashicons-games',
-			'supports' => array( 'title', 'editor', 'excerpt', 'thumbnail', 'author', 'revisions', 'custom-fields' ),
+			'supports' => array( 'title', 'editor', 'excerpt', 'thumbnail', 'author', 'revisions', 'custom-fields', 'comments' ),
 			'map_meta_cap' => true, 'capability_type' => array( 'game', 'games' ),
 		) );
 		self::taxonomy( 'game_type', __( 'Game Types', 'legend-game-directory' ), 'game-type' );

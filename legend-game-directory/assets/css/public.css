@@ -28,3 +28,20 @@
 .lgd-contact-form button{justify-self:start;border:0;border-radius:10px;padding:13px 22px;background:linear-gradient(135deg,#31d7ff,#a875ff);color:#07111f;font-weight:800;cursor:pointer}
 .lgd-contact-form .lgd-form-status{color:#1f7a4d;min-height:1.2em;margin:0}
 @media(max-width:560px){.lgd-contact-form input[name="name"],.lgd-contact-form input[name="email"],.lgd-contact-form input[name="subject"]{max-width:none}}
+
+/* Comments on game/guide pages (readable on dark shell) */
+.lgd-comments{padding:34px 0 50px}
+.lgd-comments .comments-title,.lgd-comments .comment-reply-title{font-size:1.5rem;color:var(--lgd-text);margin:0 0 18px}
+.lgd-comments ol.comment-list,.lgd-comments ul.comment-list{list-style:none;margin:0;padding:0}
+.lgd-comments .comment-body{background:var(--lgd-panel);border:1px solid var(--lgd-border);border-radius:12px;padding:16px 18px;margin:0 0 14px}
+.lgd-comments .comment-author .fn{color:var(--lgd-text);font-weight:700}
+.lgd-comments .comment-meta,.lgd-comments .comment-metadata a{color:var(--lgd-muted);font-size:.82rem}
+.lgd-comments .comment-content,.lgd-comments .comment-content p{color:var(--lgd-text)}
+.lgd-comments .children{margin-left:22px}
+.lgd-comments .comment-respond{background:var(--lgd-panel);border:1px solid var(--lgd-border);border-radius:14px;padding:20px;margin-top:22px}
+.lgd-comments label{color:var(--lgd-muted);font-size:.86rem;display:block;margin-bottom:6px}
+.lgd-comments input[type=text],.lgd-comments input[type=email],.lgd-comments input[type=url],.lgd-comments textarea{width:100%;max-width:520px;background:#fff;color:#10131a;border:1px solid var(--lgd-border);border-radius:9px;padding:11px;box-sizing:border-box}
+.lgd-comments textarea{max-width:100%}
+.lgd-comments .form-submit input,.lgd-comments input[type=submit]{border:0;border-radius:10px;padding:12px 20px;background:linear-gradient(135deg,var(--lgd-cyan),var(--lgd-purple));color:#07111f;font-weight:800;cursor:pointer}
+.lgd-comments .must-log-in,.lgd-comments .logged-in-as,.lgd-comments .no-comments{color:var(--lgd-muted)}
+.lgd-comments .must-log-in a,.lgd-comments .logged-in-as a{color:var(--lgd-cyan)}

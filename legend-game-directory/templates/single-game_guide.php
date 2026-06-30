@@ -166,5 +166,11 @@ $related = new WP_Query( $related_args );
 
 	</div>
 
+	<?php if ( comments_open() || get_comments_number() ) : ?>
+	<section class="lgd-container lgd-comments">
+		<?php comments_template(); ?>
+	</section>
+	<?php endif; ?>
+
 </main>
 <?php get_footer(); ?>
