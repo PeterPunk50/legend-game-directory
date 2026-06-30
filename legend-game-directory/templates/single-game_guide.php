@@ -127,6 +127,14 @@ $related = new WP_Query( $related_args );
 
 		<aside class="lgd-guide-sidebar">
 
+			<?php if ( comments_open() || get_comments_number() ) : $cc = (int) get_comments_number(); ?>
+			<div class="lgd-guide-sidebar__panel lgd-guide-discuss">
+				<h3><?php esc_html_e( 'Discussion', 'legend-game-directory' ); ?></h3>
+				<p class="lgd-muted" style="font-size:.85rem"><?php echo esc_html( $cc ? sprintf( _n( '%s comment so far.', '%s comments so far.', $cc, 'legend-game-directory' ), number_format_i18n( $cc ) ) : __( 'No comments yet — start the conversation.', 'legend-game-directory' ) ); ?></p>
+				<a class="lgd-button" href="#lgd-comments" style="font-size:.85rem;padding:10px 14px"><?php echo esc_html( $cc ? __( 'Join the discussion', 'legend-game-directory' ) : __( 'Leave a comment', 'legend-game-directory' ) ); ?></a>
+			</div>
+			<?php endif; ?>
+
 			<?php if ( $game_id > 0 ) : ?>
 			<div class="lgd-guide-sidebar__panel lgd-guide-game-panel">
 				<h3><?php esc_html_e( 'About the Game', 'legend-game-directory' ); ?></h3>
@@ -167,7 +175,7 @@ $related = new WP_Query( $related_args );
 	</div>
 
 	<?php if ( comments_open() || get_comments_number() ) : ?>
-	<section class="lgd-container lgd-comments">
+	<section id="lgd-comments" class="lgd-container lgd-comments">
 		<?php comments_template(); ?>
 	</section>
 	<?php endif; ?>

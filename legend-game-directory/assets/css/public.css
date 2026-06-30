@@ -45,3 +45,10 @@
 .lgd-comments .form-submit input,.lgd-comments input[type=submit]{border:0;border-radius:10px;padding:12px 20px;background:linear-gradient(135deg,var(--lgd-cyan),var(--lgd-purple));color:#07111f;font-weight:800;cursor:pointer}
 .lgd-comments .must-log-in,.lgd-comments .logged-in-as,.lgd-comments .no-comments{color:var(--lgd-muted)}
 .lgd-comments .must-log-in a,.lgd-comments .logged-in-as a{color:var(--lgd-cyan)}
+
+/* Comment-count chips on cards + discussion sidebar */
+.lgd-card-comments{color:var(--lgd-muted);text-decoration:none;font-size:.82rem;font-weight:700;margin-left:auto}
+.lgd-card-comments:hover{color:var(--lgd-cyan)}
+.lgd-guide-card__comments{color:var(--lgd-muted);text-decoration:none}
+.lgd-guide-card__comments:hover{color:var(--lgd-cyan)}
+.lgd-guide-discuss .lgd-button{display:inline-block;margin-top:6px}

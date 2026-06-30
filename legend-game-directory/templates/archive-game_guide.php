@@ -69,9 +69,10 @@ $archive_url = get_post_type_archive_link( 'game_guide' );
 					<p class="lgd-guide-card__excerpt"><?php echo esc_html( wp_trim_words( get_the_excerpt(), 20 ) ); ?></p>
 					<div class="lgd-guide-card__meta">
 						<span><?php echo esc_html( get_the_date() ); ?></span>
-						<?php if ( $read_time ) : ?>
-							<span><?php echo esc_html( $read_time . ' min read' ); ?></span>
-						<?php endif; ?>
+						<?php if ( $is_video ) : ?><span><?php esc_html_e( 'Video Guide', 'legend-game-directory' ); ?></span><?php endif; ?>
+						<?php if ( $src_site ) : ?><span><?php echo esc_html( sprintf( __( 'via %s', 'legend-game-directory' ), $src_site ) ); ?></span><?php endif; ?>
+						<?php if ( $read_time ) : ?><span><?php echo esc_html( $read_time . ' min read' ); ?></span><?php endif; ?>
+						<?php $cc = (int) get_comments_number(); if ( $cc ) : ?><a class="lgd-guide-card__comments" href="<?php echo esc_url( get_permalink() . '#lgd-comments' ); ?>">&#128172; <?php echo esc_html( number_format_i18n( $cc ) ); ?></a><?php endif; ?>
 					</div>
 				</div>
 			</article>
