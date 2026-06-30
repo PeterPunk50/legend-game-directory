@@ -17,3 +17,14 @@
 .lgd-fresh-outdated{background:rgba(255,117,151,.15);color:var(--lgd-danger);border:1px solid rgba(255,117,151,.3)}
 .lgd-fresh-unverified{background:rgba(169,183,202,.1);color:var(--lgd-muted);border:1px solid rgba(169,183,202,.2)}
 @media(max-width:900px){.lgd-search{grid-template-columns:repeat(2,1fr)}.lgd-home-cta{grid-template-columns:1fr}.lgd-grid{grid-template-columns:repeat(2,1fr)}.lgd-game-hero-grid,.lgd-two-col{grid-template-columns:1fr}.lgd-score-board{grid-template-columns:repeat(2,1fr)}}@media(max-width:560px){.lgd-search,.lgd-grid,.lgd-score-board,.lgd-facts{grid-template-columns:1fr}.lgd-breakdown-row{grid-template-columns:1fr}.lgd-sources li{display:block}.lgd-compare-float{left:16px;right:16px;text-align:center}}@media(prefers-reduced-motion:no-preference){.lgd-card{transition:transform .18s ease,border-color .18s ease}.lgd-card:hover{transform:translateY(-4px);border-color:rgba(49,215,255,.45)}}
+/* Contact form — readable on the theme's light page */
+.lgd-contact-form{display:grid;gap:16px;max-width:640px}
+.lgd-contact-form label{display:flex;flex-direction:column;gap:6px;color:#1f2430;font-size:.9rem;font-weight:600}
+.lgd-contact-form input,.lgd-contact-form textarea{background:#fff;color:#10131a;border:1px solid #c7ccd6;border-radius:9px;padding:11px 12px;min-height:44px;font-size:1rem;box-sizing:border-box}
+.lgd-contact-form input::placeholder,.lgd-contact-form textarea::placeholder{color:#8a909c}
+.lgd-contact-form input:focus,.lgd-contact-form textarea:focus{outline:none;border-color:#31d7ff;box-shadow:0 0 0 3px rgba(49,215,255,.18)}
+.lgd-contact-form input[name="name"],.lgd-contact-form input[name="email"],.lgd-contact-form input[name="subject"]{max-width:320px;width:100%}
+.lgd-contact-form textarea{width:100%;min-height:140px}
+.lgd-contact-form button{justify-self:start;border:0;border-radius:10px;padding:13px 22px;background:linear-gradient(135deg,#31d7ff,#a875ff);color:#07111f;font-weight:800;cursor:pointer}
+.lgd-contact-form .lgd-form-status{color:#1f7a4d;min-height:1.2em;margin:0}
+@media(max-width:560px){.lgd-contact-form input[name="name"],.lgd-contact-form input[name="email"],.lgd-contact-form input[name="subject"]{max-width:none}}
