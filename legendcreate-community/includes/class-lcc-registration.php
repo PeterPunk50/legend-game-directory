@@ -102,6 +102,10 @@ final class LCC_Registration {
 						?>
 					</label>
 
+					<label class="lcc-check"><input type="checkbox" name="lcc_game_alerts" value="1" checked>
+						<?php esc_html_e( 'Email me game alerts — new free & highly rated games. You can change this anytime in your profile.', 'legendcreate-community' ); ?>
+					</label>
+
 					<button type="submit" class="lcc-btn lcc-btn-lg"><?php echo $buy_id ? esc_html__( 'Create account & continue to payment', 'legendcreate-community' ) : esc_html__( 'Create my free account', 'legendcreate-community' ); ?></button>
 				</form>
 					<p class="lcc-muted"><?php esc_html_e( 'Already a member?', 'legendcreate-community' ); ?> <a class="lcc-link" href="<?php echo esc_url( wp_login_url( home_url( '/dashboard/' ) ) ); ?>"><?php esc_html_e( 'Log in', 'legendcreate-community' ); ?></a></p>
@@ -169,6 +173,10 @@ final class LCC_Registration {
 							esc_html_e( 'I agree to the community rules.', 'legendcreate-community' );
 						}
 						?>
+					</label>
+
+					<label class="lcc-check"><input type="checkbox" name="lcc_game_alerts" value="1" checked>
+						<?php esc_html_e( 'Email me game alerts — new free & highly rated games. You can change this anytime in your profile.', 'legendcreate-community' ); ?>
 					</label>
 
 					<button type="submit" class="lcc-btn lcc-btn-lg"><?php echo $buy_id ? esc_html__( 'Create account & continue to payment', 'legendcreate-community' ) : esc_html__( 'Create my free account', 'legendcreate-community' ); ?></button>
@@ -241,6 +249,14 @@ final class LCC_Registration {
 		update_user_meta( $user_id, 'lcc_verified', 0 );
 		$this->send_verification( $user_id, $token );
 
+		// Record the game-alerts opt-in from signup. We only push it to the alert
+		// list once the email is verified (see verify()), to keep double opt-in.
+		if ( ! empty( $_POST['lcc_game_alerts'] ) ) {
+			$notify = (array) get_user_meta( $user_id, 'lcc_notify', true );
+			$notify = array_values( array_unique( array_merge( $notify, array( 'game_alerts' ) ) ) );
+			update_user_meta( $user_id, 'lcc_notify', $notify );
+		}
+
 		$ref = isset( $_POST['lcc_ref'] ) ? strtoupper( sanitize_text_field( wp_unslash( $_POST['lcc_ref'] ) ) ) : '';
 		do_action( 'lcc_member_registered', $user_id, $ref );
 
@@ -271,6 +287,11 @@ final class LCC_Registration {
 			if ( $stored && hash_equals( $stored, wp_hash( $token ) ) ) {
 				update_user_meta( $uid, 'lcc_verified', 1 );
 				delete_user_meta( $uid, 'lcc_verify_hash' );
+				// Now that the email is verified, honour the game-alerts opt-in.
+				if ( method_exists( 'LCC_Profiles', 'sync_game_alerts' ) ) {
+					$notify = (array) get_user_meta( $uid, 'lcc_notify', true );
+					LCC_Profiles::sync_game_alerts( $uid, in_array( 'game_alerts', $notify, true ) );
+				}
 				do_action( 'lcc_member_verified', $uid );
 				wp_safe_redirect( add_query_arg( 'lcc_verified', '1', $dash ) );
 				exit;

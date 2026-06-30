@@ -34,6 +34,7 @@ final class LCC_Profiles {
 	);
 
 	const NOTIFY = array(
+		'game_alerts'   => 'Game alerts — new free & highly rated games',
 		'guide_updates' => 'New & updated guides for my games',
 		'squad'         => 'Squad invitations & activity',
 		'testing'       => 'Testing opportunities',
@@ -156,12 +157,29 @@ final class LCC_Profiles {
 		if ( isset( $data['notify'] ) ) {
 			$notify = array_values( array_intersect( array_keys( self::NOTIFY ), (array) $data['notify'] ) );
 			update_user_meta( $user_id, 'lcc_notify', $notify );
+			self::sync_game_alerts( $user_id, in_array( 'game_alerts', $notify, true ) );
 		}
 		if ( isset( $data['public'] ) ) {
 			update_user_meta( $user_id, 'lcc_public_profile', $data['public'] ? 1 : 0 );
 		}
 
 		do_action( 'lcc_profile_saved', $user_id );
+	}
+
+	/**
+	 * Mirror the member's "game alerts" preference into the directory alert list.
+	 * The account email is already verified, so we subscribe as confirmed (no
+	 * double opt-in). No-op if the directory plugin isn't active.
+	 */
+	public static function sync_game_alerts( $user_id, $opted_in ) {
+		if ( ! class_exists( 'LGD_Engagement' ) ) { return; }
+		$user = get_userdata( $user_id );
+		if ( ! $user || ! is_email( $user->user_email ) ) { return; }
+		if ( $opted_in && method_exists( 'LGD_Engagement', 'add_confirmed_subscriber' ) ) {
+			LGD_Engagement::add_confirmed_subscriber( $user->user_email, array( 'free', 'highly_rated' ) );
+		} elseif ( ! $opted_in && method_exists( 'LGD_Engagement', 'remove_subscriber' ) ) {
+			LGD_Engagement::remove_subscriber( $user->user_email );
+		}
 	}
 
 	// ── Front-end save handler ───────────────────────────────────────────────────
