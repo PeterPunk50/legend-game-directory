@@ -41,7 +41,10 @@ final class LGD_Engagement {
 			return new WP_Error( 'lgd_contact_invalid', __( 'Please enter your name, a valid email, and a message (at least 10 characters).', 'legend-game-directory' ), array( 'status' => 400 ) );
 		}
 
-		$to      = sanitize_email( get_option( 'admin_email' ) );
+		// Contact recipient is configurable (lgd_contact_email), falling back to the
+		// WP admin address. Set it to a mailbox you actually monitor.
+		$to      = sanitize_email( get_option( 'lgd_contact_email', get_option( 'admin_email' ) ) );
+		if ( ! is_email( $to ) ) { $to = sanitize_email( get_option( 'admin_email' ) ); }
 		$site    = get_bloginfo( 'name' );
 		$subj    = '[' . $site . ' Contact] ' . ( $subject ? $subject : __( 'New message', 'legend-game-directory' ) );
 		$body    = sprintf( "Name: %s\nEmail: %s\nSubject: %s\n\n%s", $name, $email, $subject, $message );
