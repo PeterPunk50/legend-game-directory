@@ -28,6 +28,15 @@ final class LGD_Frontend {
 			wp_enqueue_style( 'lgd-public', LGD_URL . 'assets/css/public.css', array(), LGD_VERSION );
 			wp_enqueue_style( 'lgd-guides', LGD_URL . 'assets/css/guides.css', array( 'lgd-public' ), LGD_VERSION );
 		}
+		// Pages carrying our AJAX forms (contact / submit / newsletter) need the public assets too.
+		if ( is_singular() && ! is_front_page() ) {
+			$p = get_post();
+			if ( $p && ( has_shortcode( $p->post_content, 'lgd_contact' ) || has_shortcode( $p->post_content, 'lgd_submit_game' ) || has_shortcode( $p->post_content, 'lgd_newsletter' ) ) ) {
+				wp_enqueue_style( 'lgd-public', LGD_URL . 'assets/css/public.css', array(), LGD_VERSION );
+				wp_enqueue_script( 'lgd-public', LGD_URL . 'assets/js/public.js', array(), LGD_VERSION, true );
+				wp_localize_script( 'lgd-public', 'LGD', array( 'nonce' => wp_create_nonce( 'wp_rest' ), 'compareUrl' => add_query_arg( 'games', '', get_post_type_archive_link( 'game' ) ) . '#compare' ) );
+			}
+		}
 		if ( is_admin() ) { wp_enqueue_style( 'lgd-admin', LGD_URL . 'assets/css/admin.css', array(), LGD_VERSION ); }
 	}
 

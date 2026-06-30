@@ -11,9 +11,11 @@ final class LGD_Engagement {
 		add_action( 'rest_api_init', array( $this, 'routes' ) );
 		add_shortcode( 'lgd_submit_game', array( $this, 'submit_shortcode' ) );
 		add_shortcode( 'lgd_newsletter', array( $this, 'newsletter_shortcode' ) );
+		add_shortcode( 'lgd_contact', array( $this, 'contact_shortcode' ) );
 	}
 
 	public function routes() {
+		register_rest_route( 'lgd/v1', '/contact', array( 'methods' => 'POST', 'callback' => array( $this, 'contact' ), 'permission_callback' => '__return_true' ) );
 		register_rest_route( 'lgd/v1', '/submit-game', array( 'methods' => 'POST', 'callback' => array( $this, 'submit_game' ), 'permission_callback' => 'is_user_logged_in' ) );
 		register_rest_route( 'lgd/v1', '/alerts/subscribe', array( 'methods' => 'POST', 'callback' => array( $this, 'subscribe' ), 'permission_callback' => '__return_true' ) );
 		register_rest_route( 'lgd/v1', '/alerts/confirm', array( 'methods' => 'GET', 'callback' => array( $this, 'confirm' ), 'permission_callback' => '__return_true' ) );
@@ -22,6 +24,49 @@ final class LGD_Engagement {
 
 	private function identity() {
 		return is_user_logged_in() ? 'user:' . get_current_user_id() : 'ip:' . sanitize_text_field( isset( $_SERVER['REMOTE_ADDR'] ) ? $_SERVER['REMOTE_ADDR'] : '' );
+	}
+
+	/* ----------------------------------------------------------------- Contact */
+
+	public function contact( WP_REST_Request $request ) {
+		if ( ! empty( $request['website'] ) ) { return new WP_Error( 'lgd_contact_spam', __( 'Message rejected.', 'legend-game-directory' ), array( 'status' => 400 ) ); }
+		if ( ! LGD_Security::rate_limit( 'contact:' . $this->identity(), 10, DAY_IN_SECONDS ) ) { return new WP_Error( 'lgd_contact_rate', __( 'Too many messages. Please try again later.', 'legend-game-directory' ), array( 'status' => 429 ) ); }
+
+		$name    = sanitize_text_field( $request['name'] );
+		$email   = sanitize_email( $request['email'] );
+		$subject = sanitize_text_field( $request['subject'] );
+		$message = sanitize_textarea_field( $request['message'] );
+
+		if ( '' === $name || ! is_email( $email ) || strlen( $message ) < 10 ) {
+			return new WP_Error( 'lgd_contact_invalid', __( 'Please enter your name, a valid email, and a message (at least 10 characters).', 'legend-game-directory' ), array( 'status' => 400 ) );
+		}
+
+		$to      = sanitize_email( get_option( 'admin_email' ) );
+		$site    = get_bloginfo( 'name' );
+		$subj    = '[' . $site . ' Contact] ' . ( $subject ? $subject : __( 'New message', 'legend-game-directory' ) );
+		$body    = sprintf( "Name: %s\nEmail: %s\nSubject: %s\n\n%s", $name, $email, $subject, $message );
+		$headers = array( 'Reply-To: ' . $name . ' <' . $email . '>' );
+
+		$sent = wp_mail( $to, $subj, $body, $headers );
+		LGD_Logger::log( 'contact_message', 'Contact form message received.', array( 'from' => $email, 'subject' => $subject, 'delivered' => $sent ), 'info' );
+
+		if ( ! $sent ) {
+			return new WP_Error( 'lgd_contact_failed', __( 'Sorry, the message could not be sent right now. Please email us directly.', 'legend-game-directory' ), array( 'status' => 500 ) );
+		}
+		return rest_ensure_response( array( 'sent' => true, 'message' => __( 'Thanks — your message has been sent. We aim to reply within 48 hours.', 'legend-game-directory' ) ) );
+	}
+
+	public function contact_shortcode() {
+		ob_start(); ?>
+		<form class="lgd-contact-form lgd-ajax-form" data-endpoint="<?php echo esc_url( rest_url( 'lgd/v1/contact' ) ); ?>">
+			<input type="text" name="website" class="lgd-honeypot" tabindex="-1" autocomplete="off">
+			<label><?php esc_html_e( 'Your name', 'legend-game-directory' ); ?><input name="name" required maxlength="120"></label>
+			<label><?php esc_html_e( 'Your email', 'legend-game-directory' ); ?><input name="email" type="email" required></label>
+			<label><?php esc_html_e( 'Subject', 'legend-game-directory' ); ?><input name="subject" maxlength="160"></label>
+			<label><?php esc_html_e( 'Message', 'legend-game-directory' ); ?><textarea name="message" required minlength="10" maxlength="4000" rows="6"></textarea></label>
+			<button type="submit"><?php esc_html_e( 'Send message', 'legend-game-directory' ); ?></button>
+			<p class="lgd-form-status" aria-live="polite"></p>
+		</form><?php return ob_get_clean();
 	}
 
 	/* ----------------------------------------------------------------- Submissions */
