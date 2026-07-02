@@ -3,7 +3,7 @@
  * Plugin Name: Legend Game Directory
  * Plugin URI: https://legendcreate.com/gamingsite
  * Description: Automated discovery, transparent ratings, comparisons, and moderated reviews for free, indie, and mobile games.
- * Version: 0.5.2
+ * Version: 0.5.3
  * Requires at least: 7.0
  * Requires PHP: 7.4
  * Author: Legend Create
