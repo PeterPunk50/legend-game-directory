@@ -15,7 +15,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'LGD_VERSION', '0.5.2' );
+define( 'LGD_VERSION', '0.5.3' );
 define( 'LGD_FILE', __FILE__ );
 define( 'LGD_PATH', plugin_dir_path( __FILE__ ) );
 define( 'LGD_URL', plugin_dir_url( __FILE__ ) );
