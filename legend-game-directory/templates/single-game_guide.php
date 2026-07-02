@@ -81,7 +81,7 @@ $related = new WP_Query( $related_args );
 
 			<!-- AD SLOT: guide-top -->
 			<div class="lgd-ad-slot lgd-ad-slot--guide-top" aria-hidden="true">
-				<!-- Insert ad code here (e.g. AdSense / Ezoic) -->
+				<?php LGD_Ads::render( 'guide-top' ); ?>
 			</div>
 
 			<div class="lgd-guide-body">
@@ -90,7 +90,7 @@ $related = new WP_Query( $related_args );
 
 			<!-- AD SLOT: guide-mid -->
 			<div class="lgd-ad-slot lgd-ad-slot--guide-mid" aria-hidden="true">
-				<!-- Insert ad code here -->
+				<?php LGD_Ads::render( 'guide-mid' ); ?>
 			</div>
 
 			<?php if ( $aff_url ) : ?>
@@ -122,7 +122,7 @@ $related = new WP_Query( $related_args );
 
 			<!-- AD SLOT: guide-sidebar -->
 			<div class="lgd-ad-slot lgd-ad-slot--guide-sidebar" aria-hidden="true">
-				<!-- Insert sidebar ad code here -->
+				<?php LGD_Ads::render( 'guide-sidebar' ); ?>
 			</div>
 
 			<?php if ( $related->have_posts() ) : ?>
