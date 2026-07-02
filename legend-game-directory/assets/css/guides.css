@@ -88,11 +88,20 @@
 
 /* ── Related guides on game page ── */
 .lgd-game-guides-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
-.lgd-game-guides-card{background:var(--lgd-panel);border:1px solid var(--lgd-border);border-radius:12px;padding:16px;text-decoration:none;display:block;transition:border-color .18s}
-.lgd-game-guides-card:hover{border-color:rgba(49,215,255,.4)}
-.lgd-game-guides-card__type{font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--lgd-cyan);margin-bottom:6px;display:block}
+.lgd-game-guides-card{background:var(--lgd-panel);border:1px solid var(--lgd-border);border-radius:12px;padding:16px;text-decoration:none;display:block;transition:border-color .18s,transform .18s ease}
+.lgd-game-guides-card:hover{border-color:rgba(49,215,255,.4);transform:translateY(-3px)}
+.lgd-game-guides-card__type{font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--lgd-cyan);margin-bottom:0;display:block}
 .lgd-game-guides-card__title{color:var(--lgd-text);font-size:.95rem;font-weight:700;margin:0 0 4px}
 .lgd-game-guides-card__meta{color:var(--lgd-muted);font-size:.8rem}
+/* Rich variant (STEP 11) */
+.lgd-game-guides-card--rich{padding:0;overflow:hidden}
+.lgd-game-guides-card__img{position:relative;aspect-ratio:16/9;overflow:hidden}
+.lgd-game-guides-card__img img{width:100%;height:100%;object-fit:cover;display:block}
+.lgd-game-guides-card__body{padding:14px}
+.lgd-game-guides-card__badges{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px;align-items:center}
+.lgd-game-guide-more{margin-top:20px;text-align:center}
+.lgd-game-guide-more a{color:var(--lgd-cyan);text-decoration:none;font-size:.9rem}
+.lgd-game-guide-more a:hover{text-decoration:underline}
 
 /* ── Game overview body (rewritten store copy) ── */
 .lgd-overview-body{line-height:1.7}
