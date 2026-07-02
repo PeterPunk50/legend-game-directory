@@ -29,6 +29,7 @@ final class LCC_Plugin {
 			'includes/class-lcc-premium.php',
 			'includes/class-lcc-menu.php',
 			'includes/class-lcc-notifications.php',
+			'includes/class-lcc-tokens.php',
 		);
 	}
 
@@ -54,6 +55,7 @@ final class LCC_Plugin {
 		new LCC_Premium();
 		new LCC_Menu();
 		new LCC_Notifications();
+		new LCC_Tokens();
 
 		add_action( 'admin_notices', array( $this, 'dependency_notice' ) );
 	}

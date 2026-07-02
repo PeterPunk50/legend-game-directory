@@ -6,7 +6,7 @@ if ( ! defined( 'ABSPATH' ) ) { exit; }
  */
 final class LCC_Activator {
 
-	const DB_VERSION = 5;
+	const DB_VERSION = 6;
 
 	public static function install() {
 		LCC_Roles::install_roles();
@@ -75,6 +75,22 @@ final class LCC_Activator {
 			PRIMARY KEY  (id),
 			UNIQUE KEY poll_user (poll_id, user_id),
 			KEY poll (poll_id)
+		) {$charset};" );
+
+		$tokens = $wpdb->prefix . 'lcc_token_ledger';
+		dbDelta( "CREATE TABLE {$tokens} (
+			id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+			user_id BIGINT UNSIGNED NOT NULL,
+			amount INT NOT NULL DEFAULT 0,
+			type VARCHAR(20) NOT NULL DEFAULT 'earn',
+			note TEXT NOT NULL,
+			status VARCHAR(20) NULL DEFAULT NULL,
+			created_at DATETIME NOT NULL,
+			reviewed_by BIGINT UNSIGNED NULL DEFAULT NULL,
+			reviewed_at DATETIME NULL DEFAULT NULL,
+			PRIMARY KEY  (id),
+			KEY user (user_id),
+			KEY user_status (user_id, status)
 		) {$charset};" );
 	}
 
