@@ -6,6 +6,50 @@ final class LGD_Guide_Post_Types {
 	public function __construct() {
 		add_action( 'init', array( __CLASS__, 'register_all' ) );
 		add_action( 'init', array( __CLASS__, 'register_meta' ), 20 );
+		add_action( 'pre_get_posts', array( __CLASS__, 'filter_archive' ) );
+	}
+
+	public static function filter_archive( $query ) {
+		if ( is_admin() || ! $query->is_main_query() || ! $query->is_post_type_archive( 'game_guide' ) ) { return; }
+
+		// guide_type is a registered taxonomy — WP handles ?guide_type=slug natively.
+		// We handle the three custom params WP doesn't know about.
+
+		$game_id = isset( $_GET['guide_game'] ) ? (int) wp_unslash( $_GET['guide_game'] ) : 0;
+		if ( $game_id > 0 ) {
+			$meta   = (array) $query->get( 'meta_query' );
+			$meta[] = array( 'key' => '_lgd_guide_game_id', 'value' => $game_id, 'type' => 'NUMERIC' );
+			$query->set( 'meta_query', $meta );
+		}
+
+		if ( ! empty( $_GET['guide_has_video'] ) ) {
+			$meta   = (array) $query->get( 'meta_query' );
+			$meta[] = array( 'key' => '_lgd_guide_video_url', 'value' => '', 'compare' => '!=' );
+			$query->set( 'meta_query', $meta );
+		}
+
+		$sort = isset( $_GET['guide_sort'] ) ? sanitize_key( wp_unslash( $_GET['guide_sort'] ) ) : '';
+		switch ( $sort ) {
+			case 'score':
+				$query->set( 'meta_key', '_lgd_guide_score' );
+				$query->set( 'orderby', 'meta_value_num' );
+				$query->set( 'order', 'DESC' );
+				break;
+			case 'az':
+				$query->set( 'orderby', 'title' );
+				$query->set( 'order', 'ASC' );
+				break;
+			case 'video':
+				$query->set( 'meta_key', '_lgd_guide_video_url' );
+				$query->set( 'orderby', 'meta_value' );
+				$query->set( 'order', 'DESC' );
+				break;
+			default:
+				$query->set( 'orderby', 'date' );
+				$query->set( 'order', 'DESC' );
+		}
+
+		$query->set( 'posts_per_page', 12 );
 	}
 
 	public static function register_all() {
@@ -26,7 +70,7 @@ final class LGD_Guide_Post_Types {
 			'rewrite'           => array( 'slug' => 'guides', 'with_front' => false ),
 			'menu_icon'         => 'dashicons-book-alt',
 			'menu_position'     => 6,
-			'supports'          => array( 'title', 'editor', 'excerpt', 'thumbnail', 'author', 'revisions', 'custom-fields' ),
+			'supports'          => array( 'title', 'editor', 'excerpt', 'thumbnail', 'author', 'revisions', 'custom-fields', 'comments' ),
 			'map_meta_cap'      => true,
 			'capability_type'   => array( 'guide', 'guides' ),
 			'show_in_nav_menus' => true,
@@ -58,6 +102,16 @@ final class LGD_Guide_Post_Types {
 			'_lgd_guide_ai_generated'     => 'boolean',
 			'_lgd_guide_ai_generated_at'  => 'string',
 			'_lgd_guide_last_updated'     => 'string',
+			// Indexed/external guide fields (aggregator mode).
+			'_lgd_guide_is_external'      => 'boolean',
+			'_lgd_guide_source_url'       => 'string',
+			'_lgd_guide_source_site'      => 'string',
+			'_lgd_guide_source_author'    => 'string',
+			'_lgd_guide_source_date'      => 'string',
+			'_lgd_guide_video_url'        => 'string',
+			'_lgd_guide_image_from_video' => 'boolean',
+			'_lgd_guide_score'            => 'integer',
+			'_lgd_guide_imported_at'      => 'string',
 		);
 	}
 

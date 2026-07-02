@@ -28,6 +28,15 @@ final class LGD_Frontend {
 			wp_enqueue_style( 'lgd-public', LGD_URL . 'assets/css/public.css', array(), LGD_VERSION );
 			wp_enqueue_style( 'lgd-guides', LGD_URL . 'assets/css/guides.css', array( 'lgd-public' ), LGD_VERSION );
 		}
+		// Pages carrying our AJAX forms (contact / submit / newsletter) need the public assets too.
+		if ( is_singular() && ! is_front_page() ) {
+			$p = get_post();
+			if ( $p && ( has_shortcode( $p->post_content, 'lgd_contact' ) || has_shortcode( $p->post_content, 'lgd_submit_game' ) || has_shortcode( $p->post_content, 'lgd_newsletter' ) ) ) {
+				wp_enqueue_style( 'lgd-public', LGD_URL . 'assets/css/public.css', array(), LGD_VERSION );
+				wp_enqueue_script( 'lgd-public', LGD_URL . 'assets/js/public.js', array(), LGD_VERSION, true );
+				wp_localize_script( 'lgd-public', 'LGD', array( 'nonce' => wp_create_nonce( 'wp_rest' ), 'compareUrl' => add_query_arg( 'games', '', get_post_type_archive_link( 'game' ) ) . '#compare' ) );
+			}
+		}
 		if ( is_admin() ) { wp_enqueue_style( 'lgd-admin', LGD_URL . 'assets/css/admin.css', array(), LGD_VERSION ); }
 	}
 
@@ -116,7 +125,7 @@ final class LGD_Frontend {
 			$thumb = '<span class="lgd-card-ph" style="--lgd-h:' . esc_attr( $hue ) . '">' . esc_html( $title ) . '</span>';
 		}
 		ob_start(); ?>
-		<article class="lgd-card"><a class="lgd-card-image" href="<?php echo esc_url( get_permalink( $id ) ); ?>"><?php echo $thumb; // already escaped ?></a><div class="lgd-card-body"><div class="lgd-badges"><?php foreach ( $types as $type ) : ?><span><?php echo esc_html( str_replace( ' Games', '', $type ) ); ?></span><?php endforeach; ?></div><h3><a href="<?php echo esc_url( get_permalink( $id ) ); ?>"><?php echo esc_html( get_the_title( $id ) ); ?></a></h3><p><?php echo esc_html( wp_trim_words( get_the_excerpt( $id ), 20 ) ); ?></p><div class="lgd-card-footer"><span class="lgd-score <?php echo '' === (string) $score ? 'is-missing' : ''; ?>"><?php echo '' === (string) $score ? esc_html__( 'Not scored', 'legend-game-directory' ) : esc_html( round( $score ) ); ?></span><?php if ( is_user_logged_in() ) : ?><label><input type="checkbox" class="lgd-compare-choice" value="<?php echo esc_attr( $id ); ?>"> <?php esc_html_e( 'Compare', 'legend-game-directory' ); ?></label><?php endif; ?></div></div></article><?php return ob_get_clean();
+		<article class="lgd-card"><a class="lgd-card-image" href="<?php echo esc_url( get_permalink( $id ) ); ?>"><?php echo $thumb; // already escaped ?></a><div class="lgd-card-body"><div class="lgd-badges"><?php foreach ( $types as $type ) : ?><span><?php echo esc_html( str_replace( ' Games', '', $type ) ); ?></span><?php endforeach; ?></div><h3><a href="<?php echo esc_url( get_permalink( $id ) ); ?>"><?php echo esc_html( get_the_title( $id ) ); ?></a></h3><p><?php echo esc_html( wp_trim_words( get_the_excerpt( $id ), 20 ) ); ?></p><div class="lgd-card-footer"><span class="lgd-score <?php echo '' === (string) $score ? 'is-missing' : ''; ?>"><?php echo '' === (string) $score ? esc_html__( 'Not scored', 'legend-game-directory' ) : esc_html( round( $score ) ); ?></span><?php $cc = (int) get_comments_number( $id ); if ( $cc ) : ?><a class="lgd-card-comments" href="<?php echo esc_url( get_permalink( $id ) . '#lgd-comments' ); ?>" title="<?php esc_attr_e( 'Comments', 'legend-game-directory' ); ?>">&#128172; <?php echo esc_html( number_format_i18n( $cc ) ); ?></a><?php endif; ?><?php if ( is_user_logged_in() ) : ?><label><input type="checkbox" class="lgd-compare-choice" value="<?php echo esc_attr( $id ); ?>"> <?php esc_html_e( 'Compare', 'legend-game-directory' ); ?></label><?php endif; ?></div></div></article><?php return ob_get_clean();
 	}
 
 	public function sources_shortcode( $atts ) {

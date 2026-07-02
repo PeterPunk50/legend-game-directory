@@ -50,6 +50,52 @@ final class LGD_AI_Adapter {
 	}
 
 	/**
+	 * Extract ORIGINAL, paraphrased research notes from a fetched source page.
+	 * Never copies sentences; never invents facts. Separates facts from community
+	 * opinion and flags conflicts. Returns a structured array or WP_Error.
+	 */
+	public static function extract_evidence( $context ) {
+		$ready = self::preflight( 'text' );
+		if ( is_wp_error( $ready ) ) { return $ready; }
+
+		$context = is_array( $context ) ? $context : array();
+		$json    = wp_json_encode( $context, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE );
+		if ( strlen( $json ) > 120000 ) {
+			$context['text'] = mb_substr( (string) ( $context['text'] ?? '' ), 0, 50000 );
+			$json            = wp_json_encode( $context, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE );
+		}
+
+		$system = 'You extract STRUCTURED, ORIGINAL research notes from a supplied game source page for an editorial team. '
+			. 'NEVER copy or closely paraphrase sentences from the source — restate each point as a short, original factual note in your own words. '
+			. 'Do NOT invent facts, statistics, weapons, characters, maps, abilities, prices, or patch changes that are not present in the source. '
+			. 'Separate verified facts (stated by the source) from community opinion. Identify any conflicting or contradictory claims. '
+			. 'Return ONLY valid JSON with exactly these fields: '
+			. 'publisher (string), date_published (string or empty), season (string or empty), patch (string or empty), '
+			. 'facts (array of short original factual statements grounded in the source), '
+			. 'community_observations (array of short statements that are opinion/community advice rather than official fact), '
+			. 'conflicts (array of strings describing contradictions or disputed points), '
+			. 'claims_needing_verification (array of strings an editor should double-check). '
+			. 'If the source has little usable information, return empty arrays. Keep every item concise.';
+
+		$result = self::chat_request(
+			array(
+				array( 'role' => 'system', 'content' => $system ),
+				array( 'role' => 'user', 'content' => "Extract research notes from this source.\n" . $json ),
+			),
+			1800,
+			true
+		);
+		if ( is_wp_error( $result ) ) { return $result; }
+
+		self::record_usage( $result['usage']['input'], $result['usage']['output'], 'research' );
+		$data = json_decode( $result['text'], true );
+		if ( ! is_array( $data ) ) {
+			return new WP_Error( 'lgd_ai_research_malformed', __( 'AI research extraction returned malformed JSON.', 'legend-game-directory' ) );
+		}
+		return $data;
+	}
+
+	/**
 	 * Generate an original, evergreen game guide from a game-context bundle.
 	 * Returns a structured array (title, difficulty, reading_time, key_points, body_html, seo fields)
 	 * or WP_Error. Content is original advice — the model is instructed not to fabricate specifics.
@@ -145,6 +191,90 @@ final class LGD_AI_Adapter {
 		$data = json_decode( $result['text'], true );
 		if ( ! is_array( $data ) || empty( $data['overview_html'] ) || empty( $data['short_description'] ) ) {
 			return new WP_Error( 'lgd_ai_overview_malformed', __( 'AI overview output was malformed.', 'legend-game-directory' ) );
+		}
+		return $data;
+	}
+
+	/**
+	 * Arrange supplied raw notes + image URLs into a clean, original guide layout.
+	 * Returns array( html ) or WP_Error. Uses only the provided images (exact URLs),
+	 * organizes notes into sensible sections, and never invents facts or images.
+	 */
+	public static function compose_layout( $text, $images ) {
+		$ready = self::preflight( 'text' );
+		if ( is_wp_error( $ready ) ) { return $ready; }
+
+		$text   = trim( (string) $text );
+		$images = array_values( array_filter( array_map( 'trim', (array) $images ) ) );
+		if ( '' === $text && empty( $images ) ) {
+			return new WP_Error( 'lgd_compose_empty', __( 'Add some text or images to arrange.', 'legend-game-directory' ) );
+		}
+		if ( strlen( $text ) > 24000 ) { $text = substr( $text, 0, 24000 ); }
+		$img_json = wp_json_encode( array_slice( $images, 0, 12 ), JSON_UNESCAPED_SLASHES );
+
+		$system = 'You arrange supplied raw notes and images into a clean, ORIGINAL game-guide layout in semantic HTML. '
+			. 'Use ONLY these tags: h2, h3, p, ul, ol, li, strong, em, figure, img, figcaption. '
+			. 'Organize the notes into sensible guide sections (for example: Quick Answer, What You Need to Know, '
+			. 'Recommended Setup, Step-by-Step, Common Mistakes, FAQ) but ONLY where the notes support them — '
+			. 'do not invent facts, stats, weapons, characters, maps, or content that is not in the notes. '
+			. 'Improve wording lightly for readability but keep the meaning; do not copy long passages verbatim. '
+			. 'Place each supplied image inside <figure><img src="EXACT_URL" alt="..."><figcaption>...</figcaption></figure> '
+			. 'at a relevant point, using EXACTLY the image URLs provided (never invent, alter, or drop the host) and in a '
+			. 'sensible order. Do not present images as official in-game screenshots unless the notes say so. '
+			. 'No inline styles, no links, no h1. Return ONLY valid JSON: { "html": "<the laid-out guide HTML>" }.';
+
+		$user = "NOTES:\n" . $text . "\n\nIMAGE URLS (place each as a <figure>):\n" . $img_json;
+
+		$result = self::chat_request(
+			array(
+				array( 'role' => 'system', 'content' => $system ),
+				array( 'role' => 'user', 'content' => $user ),
+			),
+			3200,
+			true
+		);
+		if ( is_wp_error( $result ) ) { return $result; }
+
+		self::record_usage( $result['usage']['input'], $result['usage']['output'], 'compose' );
+		$data = json_decode( $result['text'], true );
+		if ( ! is_array( $data ) || empty( $data['html'] ) ) {
+			return new WP_Error( 'lgd_compose_malformed', __( 'AI layout output was malformed.', 'legend-game-directory' ) );
+		}
+		return $data;
+	}
+
+	/**
+	 * Write a SHORT original summary (40-120 words) of an external guide for a
+	 * directory listing, from supplied metadata only. No source-sentence copying.
+	 * Returns array( summary ) or WP_Error.
+	 */
+	public static function index_summary( $meta ) {
+		$ready = self::preflight( 'text' );
+		if ( is_wp_error( $ready ) ) { return $ready; }
+
+		$meta = is_array( $meta ) ? $meta : array();
+		$json = wp_json_encode( $meta, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE );
+
+		$system = 'You write a SHORT, ORIGINAL summary (40-120 words) of an external game guide for a directory listing, '
+			. 'using ONLY the supplied metadata (title, description, game, guide type). Do NOT copy or closely paraphrase '
+			. 'source sentences. State the guide\'s core value, name the related game, and note whether it is beginner, '
+			. 'ranked, settings, loadout, etc. Neutral and original; do not invent specifics not implied by the metadata. '
+			. 'Return ONLY valid JSON: { "summary": "..." }.';
+
+		$result = self::chat_request(
+			array(
+				array( 'role' => 'system', 'content' => $system ),
+				array( 'role' => 'user', 'content' => "Guide metadata:\n" . $json ),
+			),
+			400,
+			true
+		);
+		if ( is_wp_error( $result ) ) { return $result; }
+
+		self::record_usage( $result['usage']['input'], $result['usage']['output'], 'index_summary' );
+		$data = json_decode( $result['text'], true );
+		if ( ! is_array( $data ) || empty( $data['summary'] ) ) {
+			return new WP_Error( 'lgd_ai_index_malformed', __( 'AI summary output was malformed.', 'legend-game-directory' ) );
 		}
 		return $data;
 	}

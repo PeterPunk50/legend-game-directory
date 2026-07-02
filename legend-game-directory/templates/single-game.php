@@ -119,38 +119,64 @@ $grade  = get_post_meta( $id, '_lgd_monetization_grade', true ) ?: 'Pending';
 		<section class="lgd-section"><h2><?php esc_html_e( 'Similar Games', 'legend-game-directory' ); ?></h2><?php $genres = wp_get_post_terms( $id, 'game_genre', array( 'fields' => 'slugs' ) ); echo do_shortcode( '[lgd_game_grid limit="3" genre="' . esc_attr( isset( $genres[0] ) ? $genres[0] : '' ) . '"]' ); ?></section>
 
 		<?php
+		// ── STEP 11: Guides for this game ──
 		$game_guides = new WP_Query( array(
 			'post_type'      => 'game_guide',
 			'post_status'    => 'publish',
-			'posts_per_page' => 3,
+			'posts_per_page' => 6,
+			'meta_key'       => '_lgd_guide_score',
+			'orderby'        => 'meta_value_num',
+			'order'          => 'DESC',
 			'meta_query'     => array( array( 'key' => '_lgd_guide_game_id', 'value' => $id, 'type' => 'NUMERIC' ) ),
 		) );
-		if ( $game_guides->have_posts() ) : ?>
-		<section class="lgd-section">
+		if ( $game_guides->have_posts() ) :
+			$guide_total = $game_guides->found_posts;
+			$archive_url = add_query_arg( 'guide_game', $id, get_post_type_archive_link( 'game_guide' ) );
+		?>
+		<section class="lgd-section lgd-game-guide-section">
 			<div class="lgd-home-heading">
-				<h2><?php esc_html_e( 'Guides for This Game', 'legend-game-directory' ); ?></h2>
-				<a href="<?php echo esc_url( get_post_type_archive_link( 'game_guide' ) ); ?>"><?php esc_html_e( 'All guides', 'legend-game-directory' ); ?> &rarr;</a>
+				<h2><?php echo esc_html( sprintf( _n( '%d Guide for This Game', '%d Guides for This Game', $guide_total, 'legend-game-directory' ), $guide_total ) ); ?></h2>
+				<a href="<?php echo esc_url( $archive_url ); ?>"><?php esc_html_e( 'Browse all', 'legend-game-directory' ); ?> &rarr;</a>
 			</div>
 			<div class="lgd-game-guides-grid">
-				<?php while ( $game_guides->have_posts() ) : $game_guides->the_post();
-					$guide_types = wp_get_post_terms( get_the_ID(), 'guide_type', array( 'fields' => 'names' ) );
-					$read_time   = (int) get_post_meta( get_the_ID(), '_lgd_guide_reading_time', true );
-					$g_diff      = get_post_meta( get_the_ID(), '_lgd_guide_difficulty', true );
-				?>
-				<a class="lgd-game-guides-card" href="<?php the_permalink(); ?>">
-					<?php if ( ! empty( $guide_types[0] ) ) : ?><span class="lgd-game-guides-card__type"><?php echo esc_html( $guide_types[0] ); ?></span><?php endif; ?>
+			<?php while ( $game_guides->have_posts() ) : $game_guides->the_post(); $gid = get_the_ID();
+				$guide_types = wp_get_post_terms( $gid, 'guide_type', array( 'fields' => 'names' ) );
+				$diff        = get_post_meta( $gid, '_lgd_guide_difficulty', true );
+				$rtime       = (int) get_post_meta( $gid, '_lgd_guide_reading_time', true );
+				$score       = (int) get_post_meta( $gid, '_lgd_guide_score', true );
+				$has_thumb   = has_post_thumbnail();
+			?>
+			<a class="lgd-game-guides-card lgd-game-guides-card--rich" href="<?php the_permalink(); ?>">
+				<?php if ( $has_thumb ) : ?>
+				<div class="lgd-game-guides-card__img">
+					<?php the_post_thumbnail( 'medium' ); ?>
+					<?php if ( $score >= 70 ) : ?><span class="lgd-guide-card__score-badge"><?php echo esc_html( $score ); ?></span><?php endif; ?>
+				</div>
+				<?php endif; ?>
+				<div class="lgd-game-guides-card__body">
+					<div class="lgd-game-guides-card__badges">
+						<?php foreach ( array_slice( $guide_types, 0, 2 ) as $gt ) : ?>
+						<span class="lgd-game-guides-card__type"><?php echo esc_html( $gt ); ?></span>
+						<?php endforeach; ?>
+						<?php if ( $diff ) : ?><span class="lgd-badge-diff lgd-diff-<?php echo esc_attr( strtolower( $diff ) ); ?>"><?php echo esc_html( $diff ); ?></span><?php endif; ?>
+					</div>
 					<p class="lgd-game-guides-card__title"><?php the_title(); ?></p>
-					<span class="lgd-game-guides-card__meta">
-						<?php if ( $g_diff ) : ?><?php echo esc_html( $g_diff ); ?><?php endif; ?>
-						<?php if ( $read_time ) : ?> &middot; <?php echo esc_html( $read_time . ' min' ); ?><?php endif; ?>
-					</span>
-				</a>
-				<?php endwhile; wp_reset_postdata(); ?>
+					<?php if ( $rtime ) : ?><span class="lgd-game-guides-card__meta"><?php echo esc_html( $rtime . ' min read' ); ?></span><?php endif; ?>
+				</div>
+			</a>
+			<?php endwhile; wp_reset_postdata(); ?>
 			</div>
+			<?php if ( $guide_total > 6 ) : ?>
+			<p class="lgd-game-guide-more"><a href="<?php echo esc_url( $archive_url ); ?>"><?php echo esc_html( sprintf( __( 'View all %d guides for %s →', 'legend-game-directory' ), $guide_total, get_the_title( $id ) ) ); ?></a></p>
+			<?php endif; ?>
 		</section>
 		<?php endif; ?>
 
 		<section class="lgd-section lgd-panel"><h2><?php esc_html_e( 'Report Incorrect Information', 'legend-game-directory' ); ?></h2><?php echo do_shortcode( '[lgd_report_game game_id="' . $id . '"]' ); ?></section>
+
+		<?php if ( comments_open() || get_comments_number() ) : ?>
+		<section id="lgd-comments" class="lgd-section lgd-comments"><?php comments_template(); ?></section>
+		<?php endif; ?>
 
 	</div>
 </main>
