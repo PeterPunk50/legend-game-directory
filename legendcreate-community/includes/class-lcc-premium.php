@@ -17,6 +17,42 @@ final class LCC_Premium {
 		add_shortcode( 'lcc_premium', array( $this, 'premium_shortcode' ) );
 		add_shortcode( 'lcc_premium_content', array( $this, 'gate_shortcode' ) );
 		add_action( 'wp_enqueue_scripts', array( $this, 'assets' ) );
+		add_filter( 'woocommerce_add_to_cart_validation', array( $this, 'clear_old_premium_before_add' ), 5, 3 );
+		add_filter( 'woocommerce_default_address_fields', array( $this, 'make_postcode_optional' ) );
+		add_filter( 'woocommerce_get_country_locale', array( $this, 'make_postcode_optional_locale' ) );
+	}
+
+	/**
+	 * Premium products are sold_individually; a stale copy left in the cart from an
+	 * earlier attempt blocks re-adding ("cannot add two subscriptions"). Runs at
+	 * priority 5 — before WooCommerce's own sold_individually check at 10.
+	 */
+	public function clear_old_premium_before_add( $valid, $product_id, $quantity ) {
+		$monthly = self::product_id( 'monthly' );
+		$annual  = self::product_id( 'annual' );
+		$ids     = array_filter( array( $monthly, $annual ) );
+		if ( ! in_array( (int) $product_id, $ids, true ) ) { return $valid; }
+		if ( ! function_exists( 'WC' ) || ! WC()->cart ) { return $valid; }
+		foreach ( WC()->cart->get_cart() as $key => $item ) {
+			if ( in_array( (int) $item['product_id'], $ids, true ) ) {
+				WC()->cart->remove_cart_item( $key );
+			}
+		}
+		return $valid;
+	}
+
+	// Postcode isn't needed for virtual memberships — don't block checkout on it.
+	public function make_postcode_optional( $fields ) {
+		if ( isset( $fields['postcode'] ) ) { $fields['postcode']['required'] = false; }
+		return $fields;
+	}
+
+	public function make_postcode_optional_locale( $locale ) {
+		foreach ( $locale as $country => $fields ) {
+			if ( ! isset( $locale[ $country ]['postcode'] ) ) { $locale[ $country ]['postcode'] = array(); }
+			$locale[ $country ]['postcode']['required'] = false;
+		}
+		return $locale;
 	}
 
 	public function assets() {
@@ -70,8 +106,12 @@ final class LCC_Premium {
 		if ( ! $product_id || ! function_exists( 'wc_get_checkout_url' ) ) { return home_url( '/' ); }
 		if ( ! is_user_logged_in() ) {
 			// Require an account so the order is linked to a user we can grant Premium to.
+			// Route through the themed Join/Login page, never the bare wp-login.php.
+			$back = add_query_arg( 'add-to-cart', $product_id, wc_get_checkout_url() );
 			$join = (int) get_option( 'lcc_page_register', 0 );
-			return wp_login_url( add_query_arg( 'add-to-cart', $product_id, wc_get_checkout_url() ) );
+			return $join
+				? add_query_arg( 'redirect_to', rawurlencode( $back ), get_permalink( $join ) )
+				: wp_login_url( $back );
 		}
 		return add_query_arg( 'add-to-cart', $product_id, wc_get_checkout_url() );
 	}

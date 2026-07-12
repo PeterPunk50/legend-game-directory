@@ -14,6 +14,7 @@ final class LCC_Memberships {
 	const META_UNTIL    = '_lcc_premium_until';   // 'Y-m-d H:i:s' in UTC
 	const META_SINCE    = '_lcc_premium_since';   // first time they went premium (UTC)
 	const META_REMINDED = '_lcc_renewal_reminded'; // expiry timestamp we last reminded for
+	const META_TIER     = '_lcc_premium_tier';    // 'monthly' or 'annual' — which plan funds the current grant
 	const CRON_HOOK     = 'lcc_membership_maintenance';
 
 	public function __construct() {
@@ -65,11 +66,17 @@ final class LCC_Memberships {
 		return $user_id ? (string) get_user_meta( $user_id, self::META_UNTIL, true ) : '';
 	}
 
+	/** Which plan funds the member's current Premium grant ('monthly'|'annual'|''). */
+	public static function current_tier( $user_id = null ) {
+		$user_id = $user_id ? (int) $user_id : get_current_user_id();
+		return $user_id ? (string) get_user_meta( $user_id, self::META_TIER, true ) : '';
+	}
+
 	/**
 	 * Grant or extend Premium by $days. If still active, extends from the current expiry;
 	 * otherwise from now. Returns the new UTC expiry string or false.
 	 */
-	public static function grant( $user_id, $days, $source = 'manual' ) {
+	public static function grant( $user_id, $days, $source = 'manual', $tier = '' ) {
 		$user_id = (int) $user_id;
 		$days    = (int) $days;
 		if ( $user_id < 1 || $days < 1 ) { return false; }
@@ -80,6 +87,7 @@ final class LCC_Memberships {
 		$until   = gmdate( 'Y-m-d H:i:s', $base + $days * DAY_IN_SECONDS );
 
 		update_user_meta( $user_id, self::META_UNTIL, $until );
+		if ( $tier ) { update_user_meta( $user_id, self::META_TIER, $tier ); }
 		if ( ! get_user_meta( $user_id, self::META_SINCE, true ) ) {
 			update_user_meta( $user_id, self::META_SINCE, gmdate( 'Y-m-d H:i:s', $now ) );
 		}
@@ -114,7 +122,12 @@ final class LCC_Memberships {
 		foreach ( $order->get_items() as $item ) {
 			$pid = (int) $item->get_product_id();
 			if ( isset( $map[ $pid ] ) && ! in_array( $pid, $processed, true ) ) {
-				self::grant( $user_id, $map[ $pid ], 'order:' . $order_id );
+				$tier = '';
+				if ( class_exists( 'LCC_Premium' ) ) {
+					if ( $pid === LCC_Premium::product_id( 'annual' ) ) { $tier = 'annual'; }
+					elseif ( $pid === LCC_Premium::product_id( 'monthly' ) ) { $tier = 'monthly'; }
+				}
+				self::grant( $user_id, $map[ $pid ], 'order:' . $order_id, $tier );
 				$processed[] = $pid;
 				$changed     = true;
 			}

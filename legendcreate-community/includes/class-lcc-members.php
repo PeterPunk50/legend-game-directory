@@ -15,13 +15,40 @@ final class LCC_Members {
 		add_action( 'wp_enqueue_scripts', array( $this, 'assets' ) );
 		add_action( 'admin_post_lcc_complete_onboarding', array( $this, 'handle_onboarding' ) );
 		add_action( 'admin_post_nopriv_lcc_complete_onboarding', array( $this, 'handle_onboarding' ) );
+		add_action( 'woocommerce_edit_account_form_end', array( $this, 'account_password_autofill_fix' ) );
+	}
+
+	/**
+	 * Browsers often auto-fill "Current password" on the account page even when the
+	 * member only wants to change their name/email. WooCommerce then requires all three
+	 * password fields. Strip the stray autofilled value on submit so editing one field
+	 * doesn't force a password change.
+	 */
+	public function account_password_autofill_fix() {
+		?>
+		<script>
+		( function () {
+			var script = document.currentScript;
+			var form = script ? script.closest( 'form' ) : null;
+			if ( ! form ) { return; }
+			form.addEventListener( 'submit', function () {
+				var cur = form.querySelector( '#password_current' );
+				var pw1 = form.querySelector( '#password_1' );
+				var pw2 = form.querySelector( '#password_2' );
+				if ( cur && pw1 && pw2 && pw1.value === '' && pw2.value === '' ) {
+					cur.value = '';
+				}
+			} );
+		} )();
+		</script>
+		<?php
 	}
 
 	public function assets() {
 		if ( ! is_singular() ) { return; }
 		$post = get_post();
 		if ( ! $post ) { return; }
-		foreach ( array( 'lcc_dashboard', 'lcc_onboarding', 'lcc_register', 'lcc_signup', 'lcc_login' ) as $sc ) {
+		foreach ( array( 'lcc_dashboard', 'lcc_onboarding', 'lcc_register', 'lcc_signup', 'lcc_login', 'lcc_feedback' ) as $sc ) {
 			if ( has_shortcode( $post->post_content, $sc ) ) {
 				wp_enqueue_style( 'lcc-community', LCC_URL . 'assets/css/community.css', array(), LCC_VERSION );
 				return;
@@ -30,7 +57,10 @@ final class LCC_Members {
 	}
 
 	private function login_gate() {
-		$url = wp_login_url( get_permalink() );
+		// Route through the themed Join/Login page, never the bare wp-login.php.
+		$join = (int) get_option( 'lcc_page_register', 0 );
+		$back = home_url( add_query_arg( array(), isset( $_SERVER['REQUEST_URI'] ) ? wp_unslash( $_SERVER['REQUEST_URI'] ) : '/' ) );
+		$url  = $join ? add_query_arg( 'redirect_to', rawurlencode( $back ), get_permalink( $join ) ) : wp_login_url( $back );
 		return '<div class="lcc-panel lcc-gate"><p>' . esc_html__( 'Please log in to access your member area.', 'legendcreate-community' )
 			. '</p><a class="lcc-btn" href="' . esc_url( $url ) . '">' . esc_html__( 'Log in', 'legendcreate-community' ) . '</a></div>';
 	}
@@ -50,6 +80,7 @@ final class LCC_Members {
 		$pct     = LCC_Profiles::completion_percentage( $uid );
 		$premium = LCC_Memberships::is_premium( $uid );
 		$until   = LCC_Memberships::premium_until( $uid );
+		$tier    = LCC_Memberships::current_tier( $uid );
 		$onb     = lcc_onboarding_page();
 
 		ob_start();
@@ -72,6 +103,9 @@ final class LCC_Members {
 			$exp = $until ? date_i18n( get_option( 'date_format' ), strtotime( $until . ' UTC' ) ) : '';
 			echo '<span class="lcc-badge lcc-badge-premium">' . esc_html__( 'Legend Premium', 'legendcreate-community' ) . '</span>';
 			if ( $exp ) { echo ' <span class="lcc-muted">' . esc_html( sprintf( __( 'until %s', 'legendcreate-community' ), $exp ) ) . '</span>'; }
+			if ( 'annual' !== $tier ) {
+				echo ' <a class="lcc-link" href="' . esc_url( home_url( '/premium/' ) ) . '">' . esc_html__( 'Upgrade to Annual', 'legendcreate-community' ) . '</a>';
+			}
 		} else {
 			echo '<span class="lcc-badge lcc-badge-free">' . esc_html__( 'Legend Member', 'legendcreate-community' ) . '</span> ';
 			echo '<a class="lcc-link" href="' . esc_url( home_url( '/premium/' ) ) . '">' . esc_html__( 'Upgrade to Premium', 'legendcreate-community' ) . '</a>';
@@ -112,12 +146,23 @@ final class LCC_Members {
 			echo '<div class="lcc-panel">' . LCC_Referrals::render( $uid ) . '</div>';
 		}
 
+		// Feedback CTA — feeds the community improvement loop.
+		$fb_page = (int) get_option( 'lcc_page_feedback', 0 );
+		$fb_url  = $fb_page ? get_permalink( $fb_page ) : home_url( '/feedback/' );
+		echo '<div class="lcc-panel lcc-cta"><strong>' . esc_html__( 'Help shape LegendCreate', 'legendcreate-community' ) . '</strong>'
+			. '<p>' . esc_html__( 'Spotted a bug? Want a feature or a guide? Tell us — member feedback drives what we build next.', 'legendcreate-community' ) . '</p>'
+			. '<a class="lcc-btn" href="' . esc_url( $fb_url ) . '">' . esc_html__( 'Give feedback', 'legendcreate-community' ) . '</a></div>';
+
 		// Edit profile form.
 		echo '<div class="lcc-panel"><h3>' . esc_html__( 'Edit Profile', 'legendcreate-community' ) . '</h3>';
 		echo $this->profile_form( $uid, $p );
 		echo '</div>';
 
-		echo '<p class="lcc-muted"><a href="' . esc_url( admin_url( 'profile.php' ) ) . '">' . esc_html__( 'Account & password settings', 'legendcreate-community' ) . '</a> &middot; <a href="' . esc_url( wp_logout_url( home_url( '/' ) ) ) . '">' . esc_html__( 'Log out', 'legendcreate-community' ) . '</a></p>';
+		// Account settings on the themed WooCommerce page, not raw wp-admin.
+		$acct_url = ( function_exists( 'wc_get_endpoint_url' ) && function_exists( 'wc_get_page_permalink' ) )
+			? wc_get_endpoint_url( 'edit-account', '', wc_get_page_permalink( 'myaccount' ) )
+			: home_url( '/my-account/edit-account/' );
+		echo '<p class="lcc-muted"><a href="' . esc_url( $acct_url ) . '">' . esc_html__( 'Account & password settings', 'legendcreate-community' ) . '</a> &middot; <a href="' . esc_url( wp_logout_url( home_url( '/' ) ) ) . '">' . esc_html__( 'Log out', 'legendcreate-community' ) . '</a></p>';
 		echo '</div>';
 		return ob_get_clean();
 	}

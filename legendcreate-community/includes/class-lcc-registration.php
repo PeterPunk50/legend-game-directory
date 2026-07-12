@@ -63,9 +63,31 @@ final class LCC_Registration {
 		ob_start(); ?>
 		<div class="lcc-shell">
 			<div class="lcc-join-head">
-				<h2><?php esc_html_e( 'Join LegendCreate', 'legendcreate-community' ); ?></h2>
-				<p class="lcc-muted"><?php esc_html_e( 'Bring your squad, keep playing the games you love, and earn community status.', 'legendcreate-community' ); ?></p>
+				<h2><?php esc_html_e( 'Sign In or Join LegendCreate', 'legendcreate-community' ); ?></h2>
+				<p class="lcc-muted"><?php esc_html_e( 'Already a member? Sign in below. New here? Choose a plan to get started.', 'legendcreate-community' ); ?></p>
 			</div>
+			<div class="lcc-panel lcc-login-block">
+				<h3><?php esc_html_e( 'Sign In', 'legendcreate-community' ); ?></h3>
+				<?php
+				$_redirect = ! empty( $_GET['redirect_to'] ) ? esc_url_raw( wp_unslash( $_GET['redirect_to'] ) ) : '';
+				if ( ! $_redirect ) {
+					$_dash     = lcc_dashboard_page();
+					$_redirect = $_dash ? get_permalink( $_dash ) : home_url( '/dashboard/' );
+				}
+				wp_login_form( array(
+					'redirect'       => $_redirect,
+					'label_username' => __( 'Email or Username', 'legendcreate-community' ),
+					'label_password' => __( 'Password', 'legendcreate-community' ),
+					'label_log_in'   => __( 'Sign In', 'legendcreate-community' ),
+					'id_username'    => 'lcc-login-username',
+					'id_password'    => 'lcc-login-password',
+					'id_submit'      => 'lcc-login-submit',
+					'remember'       => true,
+					'value_remember' => true,
+				) );
+				?>
+			</div>
+			<div class="lcc-section-divider"><span><?php esc_html_e( 'New to LegendCreate?', 'legendcreate-community' ); ?></span></div>
 			<?php if ( class_exists( 'LCC_Premium' ) ) { echo LCC_Premium::pricing_summary(); } ?>
 			<?php if ( $show_form ) : ?>
 			<div class="lcc-panel lcc-join-form" id="lcc-join-form">

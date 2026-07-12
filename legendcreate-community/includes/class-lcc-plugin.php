@@ -30,6 +30,8 @@ final class LCC_Plugin {
 			'includes/class-lcc-menu.php',
 			'includes/class-lcc-notifications.php',
 			'includes/class-lcc-tokens.php',
+			'includes/class-lcc-feedback.php',
+			'includes/class-lcc-admin-support.php',
 		);
 	}
 
@@ -56,8 +58,21 @@ final class LCC_Plugin {
 		new LCC_Menu();
 		new LCC_Notifications();
 		new LCC_Tokens();
+		new LCC_Feedback();
+		new LCC_Admin_Support();
 
 		add_action( 'admin_notices', array( $this, 'dependency_notice' ) );
+		add_action( 'wp_head', array( $this, 'sticky_footer_css' ), 20 );
+	}
+
+	/**
+	 * Some pages (e.g. WooCommerce My Account, Member Dashboard, Squads archive)
+	 * have little content, leaving the theme footer floating above the bottom of
+	 * the viewport. Stretch the page wrapper so the footer sits at the bottom.
+	 */
+	public function sticky_footer_css() {
+		if ( is_admin() ) { return; }
+		echo '<style id="lcc-sticky-footer">#page.site{min-height:100vh;display:flex;flex-direction:column}#page.site>header,#page.site>footer{flex-shrink:0}#page.site>*:not(header):not(footer):not(a){flex:1 0 auto;min-height:0}</style>';
 	}
 
 	/**
