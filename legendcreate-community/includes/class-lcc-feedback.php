@@ -277,12 +277,40 @@ final class LCC_Feedback {
 		}
 		$to = isset( $_GET['to'] ) ? sanitize_key( wp_unslash( $_GET['to'] ) ) : '';
 		if ( in_array( $to, array( 'new', 'synced', 'actioned', 'dismissed' ), true ) ) {
-			global $wpdb;
-			self::ensure_table();
-			$wpdb->update( self::table(), array( 'status' => $to ), array( 'id' => $fid ), array( '%s' ), array( '%d' ) );
+			self::set_status( $fid, $to );
 		}
 		wp_safe_redirect( add_query_arg( array( 'page' => 'lcc-feedback' ), admin_url( 'users.php' ) ) );
 		exit;
+	}
+
+	/** Change one item's status; emails the member the first time it becomes 'actioned'. */
+	private static function set_status( $fid, $to ) {
+		global $wpdb;
+		self::ensure_table();
+		$row = $wpdb->get_row( $wpdb->prepare( 'SELECT * FROM ' . self::table() . ' WHERE id = %d', $fid ) );
+		if ( ! $row || $row->status === $to ) { return false; }
+		$wpdb->update( self::table(), array( 'status' => $to ), array( 'id' => $fid ), array( '%s' ), array( '%d' ) );
+		if ( 'actioned' === $to ) { self::notify_member( $row ); }
+		return true;
+	}
+
+	/** Close the loop publicly: tell the member their feedback shipped onto the build list. */
+	private static function notify_member( $row ) {
+		$user = get_userdata( (int) $row->user_id );
+		if ( ! $user || ! $user->user_email ) { return; }
+		$fb_page = (int) get_option( 'lcc_page_feedback', 0 );
+		$fb_url  = $fb_page ? get_permalink( $fb_page ) : home_url( '/feedback/' );
+		$excerpt = mb_substr( trim( (string) $row->message ), 0, 160 );
+
+		$subject = __( 'Your feedback just shaped LegendCreate', 'legendcreate-community' );
+		$body    = sprintf(
+			/* translators: 1: member name, 2: feedback excerpt, 3: feedback page URL */
+			__( "Hi %1\$s,\n\nGood news — the feedback you sent us:\n\n  \"%2\$s\"\n\n...has been reviewed, approved by the team, and added to our build list as a real improvement.\n\nThank you for helping shape LegendCreate. Keep the ideas coming: %3\$s\n\n— The LegendCreate team", 'legendcreate-community' ),
+			$user->display_name,
+			$excerpt,
+			$fb_url
+		);
+		wp_mail( $user->user_email, $subject, $body );
 	}
 
 	// ── REST feed for FBE HQ (Application Password auth, manage_options) ────────
@@ -303,6 +331,21 @@ final class LCC_Feedback {
 			'callback'            => array( $this, 'rest_mark_synced' ),
 			'permission_callback' => function () { return current_user_can( 'manage_options' ); },
 		) );
+		register_rest_route( 'lcc/v1', '/feedback/mark-actioned', array(
+			'methods'             => 'POST',
+			'callback'            => array( $this, 'rest_mark_actioned' ),
+			'permission_callback' => function () { return current_user_can( 'manage_options' ); },
+		) );
+	}
+
+	/** HQ calls this when an approved improvement task is created; members get thanked. */
+	public function rest_mark_actioned( $request ) {
+		$ids     = array_filter( array_map( 'intval', (array) $request->get_param( 'ids' ) ) );
+		$updated = 0;
+		foreach ( $ids as $fid ) {
+			if ( self::set_status( $fid, 'actioned' ) ) { $updated++; }
+		}
+		return rest_ensure_response( array( 'updated' => $updated ) );
 	}
 
 	public function rest_list( $request ) {

@@ -32,6 +32,9 @@ final class LCC_Menu {
 			return $items;
 		}
 		if ( is_user_logged_in() ) {
+			$fb     = self::page_url( 'lcc_page_feedback' );
+			$fb     = $fb ? $fb : home_url( '/feedback/' );
+			$items .= '<li class="menu-item"><a href="' . esc_url( $fb ) . '">' . esc_html__( 'Feedback', 'legendcreate-community' ) . '</a></li>';
 			$url    = self::page_url( 'lcc_page_dashboard' );
 			$url    = $url ? $url : home_url( '/dashboard/' );
 			$items .= '<li class="menu-item lcc-nav-cta"><a class="lcc-btn-nav" href="' . esc_url( $url ) . '">' . esc_html__( 'My Account', 'legendcreate-community' ) . '</a></li>';
