@@ -38,6 +38,7 @@ final class LGD_Plugin {
 				'includes/class-lgd-research.php',
 				'includes/class-lgd-guide-composer.php',
 				'includes/class-lgd-guide-indexer.php',
+				'includes/class-lgd-ads.php',
 		);
 	}
 
@@ -66,6 +67,7 @@ final class LGD_Plugin {
 		new LGD_Research();
 		new LGD_Guide_Composer();
 		new LGD_Guide_Indexer();
+		new LGD_Ads();
 		add_action( 'admin_init', array( 'LGD_Database', 'maybe_upgrade' ) );
 		add_action( 'init', array( 'LGD_AI_Adapter', 'ensure_provider_credentials' ), 6 );
 	}
