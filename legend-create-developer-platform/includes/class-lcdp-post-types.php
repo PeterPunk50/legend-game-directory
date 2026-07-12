@@ -14,8 +14,9 @@ class LCDP_Post_Types {
 			'public'        => true,
 			'show_in_menu'  => 'lcdp-platform',
 			'supports'      => array( 'title', 'editor', 'thumbnail', 'excerpt', 'custom-fields', 'comments' ),
-			'has_archive'   => 'games',
-			'rewrite'       => array( 'slug' => 'games' ),
+			// No 'games' archive/slug: /games/ belongs to the Legend Game Directory plugin.
+			'has_archive'   => false,
+			'rewrite'       => array( 'slug' => 'game-profile' ),
 			'show_in_rest'  => true,
 			'menu_icon'     => 'dashicons-games',
 			'capability_type' => array( 'lcdp_game', 'lcdp_games' ),
@@ -28,7 +29,8 @@ class LCDP_Post_Types {
 			'public'        => true,
 			'show_in_menu'  => 'lcdp-platform',
 			'supports'      => array( 'title', 'editor', 'thumbnail', 'custom-fields' ),
-			'has_archive'   => 'developers',
+			// No 'developers' archive: /developers/ is the Developer Services page.
+			'has_archive'   => false,
 			'rewrite'       => array( 'slug' => 'developer' ),
 			'show_in_rest'  => true,
 			'capability_type' => array( 'lcdp_developer', 'lcdp_developers' ),
