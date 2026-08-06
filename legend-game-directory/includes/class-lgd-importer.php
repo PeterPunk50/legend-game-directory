@@ -51,7 +51,8 @@ final class LGD_Importer {
 		update_post_meta( $game_id, '_lgd_last_verified', current_time( 'mysql', true ) );
 		update_post_meta( $game_id, '_lgd_verification_status', (float) $data['confidence'] >= 80 ? 'verified_source' : 'needs_review' );
 
-		$rating = LGD_Rating_Engine::calculate( isset( $data['rating_facts'] ) ? $data['rating_facts'] : array(), isset( $data['confidence'] ) ? $data['confidence'] : 0 );
+		$facts = ( isset( $data['rating_facts'] ) && is_array( $data['rating_facts'] ) ) ? $data['rating_facts'] : LGD_Rating_Engine::derive_facts( $data );
+		$rating = LGD_Rating_Engine::calculate( $facts, isset( $data['confidence'] ) ? $data['confidence'] : 0 );
 		LGD_Rating_Engine::save( $game_id, $rating );
 		$flags = self::mandatory_flags( $data, $old_score, $rating['score'], $is_new );
 		update_post_meta( $game_id, '_lgd_mandatory_review_flags', $flags );
@@ -74,9 +75,12 @@ final class LGD_Importer {
 	}
 
 	private static function find_duplicate( $data ) {
-		$slug = sanitize_title( $data['title'] );
-		$posts = get_posts( array( 'post_type' => 'game', 'post_status' => 'any', 'name' => $slug, 'numberposts' => 2, 'fields' => 'ids' ) );
-		return 1 === count( $posts ) ? (int) $posts[0] : 0;
+		global $wpdb;
+		// Match by exact title across any status (pending records have no slug, so a name match would miss them).
+		// Only merge when the match is unambiguous (exactly one existing record).
+		$title = sanitize_text_field( $data['title'] );
+		$ids = $wpdb->get_col( $wpdb->prepare( "SELECT ID FROM {$wpdb->posts} WHERE post_type='game' AND post_status<>'trash' AND post_title=%s ORDER BY ID ASC LIMIT 2", $title ) );
+		return 1 === count( $ids ) ? (int) $ids[0] : 0;
 	}
 
 	private static function save_fields( $game_id, $provider_id, $data ) {
@@ -94,7 +98,7 @@ final class LGD_Importer {
 			'external_critic_score' => '_lgd_external_critic_score', 'external_user_score' => '_lgd_external_user_score',
 		);
 		foreach ( $map as $source => $meta ) { if ( array_key_exists( $source, $data ) && null !== $data[ $source ] ) { update_post_meta( $game_id, $meta, $data[ $source ] ); } }
-		$url_map = array( 'steam' => '_lgd_steam_url', 'apple' => '_lgd_apple_app_store_url', 'itch' => '_lgd_itch_url' );
+		$url_map = array( 'steam' => '_lgd_steam_url', 'apple' => '_lgd_apple_app_store_url', 'google_play' => '_lgd_google_play_url', 'itch' => '_lgd_itch_url' );
 		if ( isset( $url_map[ $provider_id ] ) ) { update_post_meta( $game_id, $url_map[ $provider_id ], esc_url_raw( $data['source_url'] ) ); }
 		if ( 'official_site' === $provider_id ) { update_post_meta( $game_id, '_lgd_official_website', esc_url_raw( $data['source_url'] ) ); }
 		$ids = (array) get_post_meta( $game_id, '_lgd_provider_ids', true ); $ids[ $provider_id ] = sanitize_text_field( $data['external_id'] ); update_post_meta( $game_id, '_lgd_provider_ids', $ids );
@@ -106,8 +110,16 @@ final class LGD_Importer {
 		if ( ! empty( $data['is_indie'] ) && (float) $data['indie_confidence'] >= 50 ) { $types[] = 'Indie Games'; }
 		if ( ! empty( $data['is_mobile'] ) ) { $types[] = 'Mobile Games'; }
 		wp_set_object_terms( $game_id, $types, 'game_type', false );
+
+		// Apply taxonomy map before setting genres — normalises raw provider terms and drops junk ones.
+		$raw_genres = isset( $data['genres'] ) ? LGD_Security::sanitize_string_list( $data['genres'] ) : array();
+		$genres     = array_values( array_unique( array_filter( array_map(
+			function( $g ) { return LGD_Taxonomy_Map::apply( 'game_genre', $g ); },
+			$raw_genres
+		) ) ) );
+		wp_set_object_terms( $game_id, $genres, 'game_genre', false );
+
 		wp_set_object_terms( $game_id, isset( $data['platforms'] ) ? LGD_Security::sanitize_string_list( $data['platforms'] ) : array(), 'game_platform', false );
-		wp_set_object_terms( $game_id, isset( $data['genres'] ) ? LGD_Security::sanitize_string_list( $data['genres'] ) : array(), 'game_genre', false );
 		if ( ! empty( $data['free_type'] ) ) { wp_set_object_terms( $game_id, sanitize_text_field( $data['free_type'] ), 'game_pricing', false ); }
 	}
 
@@ -140,6 +152,8 @@ final class LGD_Importer {
 
 	private static function save_ai_summary( $game_id, $summary ) {
 		wp_update_post( array( 'ID' => $game_id, 'post_excerpt' => sanitize_textarea_field( $summary['short_description'] ), 'post_content' => wp_kses_post( wpautop( $summary['full_summary'] ) ) ) );
+		// Keep the hero lead in sync with the AI short description (not the raw store copy).
+		update_post_meta( $game_id, '_lgd_short_description', sanitize_textarea_field( $summary['short_description'] ) );
 		foreach ( array( 'best_for', 'pros', 'cons', 'monetization_notes', 'safety_notes', 'seo_title', 'meta_description', 'image_prompt' ) as $key ) { update_post_meta( $game_id, '_lgd_' . $key, $summary[ $key ] ); }
 		update_post_meta( $game_id, '_lgd_ai_generated_at', current_time( 'mysql', true ) );
 	}

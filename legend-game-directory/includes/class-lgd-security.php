@@ -55,6 +55,36 @@ final class LGD_Security {
 		return $response;
 	}
 
+	/**
+	 * The POST twin of safe_remote_get(), for APIs whose query travels in the body.
+	 *
+	 * Identical validation — allowlist, DNS, private and reserved address
+	 * rejection, https only — because a POST is exactly as capable of reaching
+	 * the internal network as a GET, and a provider that needed POST must not be
+	 * the reason that check is skipped. wp_safe_remote_post() adds WordPress's
+	 * own SSRF protection on top.
+	 *
+	 * The response body is NOT size-capped the way the GET helper caps it:
+	 * limit_response_size is passed through from $args when a caller wants it,
+	 * but an API answering a bounded query does not need a truncation rule that
+	 * would corrupt its JSON mid-object. The status check is the same.
+	 */
+	public static function safe_remote_post( $url, $allowlist = null, $args = array() ) {
+		$valid = self::validate_public_url( $url, $allowlist );
+		if ( is_wp_error( $valid ) ) { return $valid; }
+		$defaults = array(
+			'timeout' => 15, 'redirection' => 0, 'reject_unsafe_urls' => true,
+			'headers' => array( 'User-Agent' => 'LegendGameDirectory/' . LGD_VERSION . '; ' . home_url( '/' ) ),
+		);
+		$response = wp_safe_remote_post( $valid, array_replace_recursive( $defaults, $args ) );
+		if ( is_wp_error( $response ) ) { return $response; }
+		$code = wp_remote_retrieve_response_code( $response );
+		if ( $code < 200 || $code >= 300 ) {
+			return new WP_Error( 'lgd_remote_status', sprintf( __( 'The source returned HTTP %d.', 'legend-game-directory' ), $code ) );
+		}
+		return $response;
+	}
+
 	public static function rate_limit( $bucket, $limit, $window ) {
 		$key = 'lgd_rl_' . md5( (string) $bucket );
 		$count = (int) get_transient( $key );

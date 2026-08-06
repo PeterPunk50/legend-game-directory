@@ -12,7 +12,7 @@ final class LGD_Post_Types {
 			'labels' => array( 'name' => __( 'Games', 'legend-game-directory' ), 'singular_name' => __( 'Game', 'legend-game-directory' ), 'add_new_item' => __( 'Add Game', 'legend-game-directory' ), 'edit_item' => __( 'Edit Game', 'legend-game-directory' ) ),
 			'public' => true, 'show_in_rest' => true, 'has_archive' => 'games',
 			'rewrite' => array( 'slug' => 'games', 'with_front' => false ), 'menu_icon' => 'dashicons-games',
-			'supports' => array( 'title', 'editor', 'excerpt', 'thumbnail', 'author', 'revisions', 'custom-fields' ),
+			'supports' => array( 'title', 'editor', 'excerpt', 'thumbnail', 'author', 'revisions', 'custom-fields', 'comments' ),
 			'map_meta_cap' => true, 'capability_type' => array( 'game', 'games' ),
 		) );
 		self::taxonomy( 'game_type', __( 'Game Types', 'legend-game-directory' ), 'game-type' );
@@ -51,6 +51,13 @@ final class LGD_Post_Types {
 			'_lgd_score_breakdown' => 'object', '_lgd_missing_data' => 'array', '_lgd_provider_ids' => 'object',
 			'_lgd_mandatory_review_flags' => 'array', '_lgd_ai_prompt' => 'string', '_lgd_ai_generated_at' => 'string',
 			'_lgd_seo_title' => 'string', '_lgd_meta_description' => 'string',
+			// Monetization Grade (v0.1.12).
+			'_lgd_monetization_grade' => 'string', '_lgd_monetization_grade_override' => 'string',
+			'_lgd_monetization_grade_reason' => 'string',
+			// Granular verification dates (v0.1.12).
+			'_lgd_verified_source_check' => 'string', '_lgd_verified_price_check' => 'string',
+			'_lgd_verified_platform_check' => 'string', '_lgd_verified_monetization_check' => 'string',
+			'_lgd_verified_editorial_review' => 'string',
 		);
 	}
 
@@ -83,7 +90,7 @@ final class LGD_Post_Types {
 		$sets = array(
 			'game_type' => array( 'Free Games', 'Indie Games', 'Mobile Games' ),
 			'game_platform' => array( 'Android', 'iOS', 'Windows', 'macOS', 'Linux', 'Browser', 'Steam Deck' ),
-			'game_genre' => array( 'Action', 'Adventure', 'RPG', 'Strategy', 'Simulation', 'Puzzle', 'Racing', 'Sports', 'Horror', 'Survival', 'Sandbox', 'Casual', 'Card', 'Roguelike', 'Platformer', 'MMO', 'Multiplayer' ),
+			'game_genre' => array( 'Action', 'Adventure', 'RPG', 'Strategy', 'Simulation', 'Puzzle', 'Racing', 'Sports', 'Horror', 'Survival', 'Sandbox', 'Casual', 'Card', 'Roguelike', 'Platformer', 'MMO', 'Multiplayer', 'Educational' ),
 			'game_pricing' => array( 'Permanently Free', 'Free to Play', 'Freemium', 'Free Demo', 'Temporarily Free', 'Open Source', 'Paid Indie' ),
 		);
 		foreach ( $sets as $taxonomy => $terms ) {
