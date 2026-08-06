@@ -2,7 +2,9 @@
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
 final class LGD_Database {
-	const VERSION = '3';
+	// 4: IGDB provider — approved_domains gains api.igdb.com, id.twitch.tv and
+	// images.igdb.com, backfilled onto existing installs by install().
+	const VERSION = '4';
 
 	public static function table( $suffix ) {
 		global $wpdb;
@@ -109,6 +111,40 @@ final class LGD_Database {
 		}
 		update_option( 'lgd_db_version', self::VERSION, false );
 		add_option( 'lgd_settings', self::defaults(), '', false );
+		self::backfill_approved_domains();
+	}
+
+	/**
+	 * Teach an EXISTING install about hosts a new provider needs.
+	 *
+	 * defaults() only reaches a site through wp_parse_args(), which fills in
+	 * missing keys and never merges inside one. An install that already has
+	 * lgd_settings therefore keeps its old approved_domains list forever, and a
+	 * new provider's host would be refused by LGD_Security::host_allowed() with
+	 * a "domain is not approved" error that looks nothing like the real cause.
+	 *
+	 * Deliberately NARROW: it adds only the specific hosts named here, only when
+	 * they are absent, and it removes nothing. A blanket merge of defaults()
+	 * would resurrect any domain an administrator had deliberately deleted, and
+	 * this has no way to tell that apart from one they never had.
+	 */
+	private static function backfill_approved_domains() {
+		$new = array( 'api.igdb.com', 'id.twitch.tv', 'images.igdb.com' );
+
+		$settings = get_option( 'lgd_settings', array() );
+		if ( ! is_array( $settings ) ) { return; }
+		$current = isset( $settings['approved_domains'] ) && is_array( $settings['approved_domains'] )
+			? $settings['approved_domains'] : array();
+
+		$missing = array_diff( $new, $current );
+		if ( empty( $missing ) ) { return; }
+
+		$settings['approved_domains'] = array_values( array_unique( array_merge( $current, $missing ) ) );
+		update_option( 'lgd_settings', $settings, false );
+
+		if ( class_exists( 'LGD_Logger' ) ) {
+			LGD_Logger::log( 'settings', 'Approved domains extended for a new provider: ' . implode( ', ', $missing ) );
+		}
 	}
 
 	public static function maybe_upgrade() {
@@ -127,9 +163,15 @@ final class LGD_Database {
 			'enable_ai_images' => false, 'ai_provider' => 'openai', 'ai_model' => '',
 			'ai_daily_request_limit' => 50, 'ai_monthly_cost_limit' => 25,
 			'ai_estimated_input_rate' => 0, 'ai_estimated_output_rate' => 0,
-			'approved_domains' => array( 'steampowered.com', 'steamgames.com', 'apple.com', 'itunes.apple.com', 'itch.io' ),
+			// api.igdb.com is the API and id.twitch.tv mints its token; images.igdb.com
+			// is the CDN the artwork fetcher sideloads covers and screenshots from.
+			'approved_domains' => array( 'steampowered.com', 'steamgames.com', 'apple.com', 'itunes.apple.com', 'itch.io', 'api.igdb.com', 'id.twitch.tv', 'images.igdb.com' ),
 			'blocked_domains' => array(), 'steam_enabled' => false, 'steam_terms_accepted' => false,
 			'apple_enabled' => true, 'google_play_enabled' => false, 'itch_enabled' => false,
+			// Off until a Twitch application exists and its two constants are in
+			// wp-config. The provider fails closed on either being absent, so
+			// flipping this alone changes nothing.
+			'igdb_enabled' => false,
 			'official_site_enabled' => true, 'review_auto_approve' => false,
 			'review_require_verified' => true, 'data_retention_days' => 365, 'weights' => $weights,
 		);
