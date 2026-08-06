@@ -16,6 +16,7 @@ final class LGD_Provider_Registry {
 		self::register( 'google_play', new LGD_Provider_Google_Play() );
 		self::register( 'itch', new LGD_Provider_Itch() );
 		self::register( 'igdb', new LGD_Provider_IGDB() );
+		self::register( 'rawg', new LGD_Provider_RAWG() );
 		self::register( 'external_score', new LGD_Provider_External_Score() );
 		self::register( 'official_site', new LGD_Provider_Official_Site() );
 		do_action( 'lgd_register_providers' );

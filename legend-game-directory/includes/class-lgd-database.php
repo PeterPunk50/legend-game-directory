@@ -3,8 +3,11 @@ if ( ! defined( 'ABSPATH' ) ) { exit; }
 
 final class LGD_Database {
 	// 4: IGDB provider — approved_domains gains api.igdb.com, id.twitch.tv and
-	// images.igdb.com, backfilled onto existing installs by install().
-	const VERSION = '4';
+	//    images.igdb.com, backfilled onto existing installs by install().
+	// 5: RAWG provider — same treatment for api.rawg.io and media.rawg.io. The
+	//    backfill is idempotent and adds only what is missing, so a site already
+	//    on 4 gains just the two RAWG hosts.
+	const VERSION = '5';
 
 	public static function table( $suffix ) {
 		global $wpdb;
@@ -129,7 +132,7 @@ final class LGD_Database {
 	 * this has no way to tell that apart from one they never had.
 	 */
 	private static function backfill_approved_domains() {
-		$new = array( 'api.igdb.com', 'id.twitch.tv', 'images.igdb.com' );
+		$new = array( 'api.igdb.com', 'id.twitch.tv', 'images.igdb.com', 'api.rawg.io', 'media.rawg.io' );
 
 		$settings = get_option( 'lgd_settings', array() );
 		if ( ! is_array( $settings ) ) { return; }
@@ -165,13 +168,18 @@ final class LGD_Database {
 			'ai_estimated_input_rate' => 0, 'ai_estimated_output_rate' => 0,
 			// api.igdb.com is the API and id.twitch.tv mints its token; images.igdb.com
 			// is the CDN the artwork fetcher sideloads covers and screenshots from.
-			'approved_domains' => array( 'steampowered.com', 'steamgames.com', 'apple.com', 'itunes.apple.com', 'itch.io', 'api.igdb.com', 'id.twitch.tv', 'images.igdb.com' ),
+			// media.rawg.io is RAWG's equivalent image CDN.
+			'approved_domains' => array( 'steampowered.com', 'steamgames.com', 'apple.com', 'itunes.apple.com', 'itch.io', 'api.igdb.com', 'id.twitch.tv', 'images.igdb.com', 'api.rawg.io', 'media.rawg.io' ),
 			'blocked_domains' => array(), 'steam_enabled' => false, 'steam_terms_accepted' => false,
 			'apple_enabled' => true, 'google_play_enabled' => false, 'itch_enabled' => false,
-			// Off until a Twitch application exists and its two constants are in
-			// wp-config. The provider fails closed on either being absent, so
-			// flipping this alone changes nothing.
+			// Both off until their credential is in wp-config. Each provider fails
+			// closed on an absent key, so flipping either flag alone changes nothing.
+			// IGDB is dormant rather than deleted: it is written and deployed, and
+			// is one constant away if the Twitch account is ever cleared (its 2FA
+			// enrolment would not complete for a Barbados number, which is why RAWG
+			// is the live path).
 			'igdb_enabled' => false,
+			'rawg_enabled' => false,
 			'official_site_enabled' => true, 'review_auto_approve' => false,
 			'review_require_verified' => true, 'data_retention_days' => 365, 'weights' => $weights,
 		);

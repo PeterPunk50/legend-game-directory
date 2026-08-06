@@ -22,6 +22,7 @@ final class LGD_Plugin {
 			'includes/providers/class-lgd-provider-google-play.php',
 			'includes/providers/class-lgd-provider-itch.php',
 			'includes/providers/class-lgd-provider-igdb.php',
+			'includes/providers/class-lgd-provider-rawg.php',
 			'includes/providers/class-lgd-provider-external-score.php',
 			'includes/providers/class-lgd-provider-official-site.php',
 			'includes/class-lgd-rating-engine.php', 'includes/class-lgd-ai-adapter.php',
